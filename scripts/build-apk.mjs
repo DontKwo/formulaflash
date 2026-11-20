@@ -72,6 +72,13 @@ function main() {
   run('npx cap sync android', appDir);
 
   console.log(`\n[3/4] Running Gradle ${gradleTask}...`);
+  if (!isWindows) {
+    try {
+      execSync('chmod +x ./gradlew', { cwd: androidDir, stdio: 'ignore' });
+    } catch {
+      // continue
+    }
+  }
   const gradlew = isWindows ? 'gradlew.bat' : './gradlew';
   run(`${gradlew} ${gradleTask}`, androidDir);
 

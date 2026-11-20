@@ -7,3 +7,6 @@ build/
 .orchestrator_state.json
 test-results/
 tests/e2e/test-results.json
+.toolchain/
+.lint_cache.json
+lint_report*.txt
