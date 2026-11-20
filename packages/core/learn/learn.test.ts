@@ -98,4 +98,40 @@ describe('LearnEngine', () => {
     expect(engine1.getNext()?.card.id).toBe(engine2.getNext()?.card.id);
     expect(engine1.getNext()?.card.id).toBe(engine2.getNext()?.card.id);
   });
+
+  it('exposes hints and explanations on prompts', () => {
+    const cardWithHints: Card = {
+      ...mockCard,
+      id: 'c-hint',
+      hints: [[{ t: 'text', v: 'Recall the quadratic formula' }]],
+      explanation: [{ t: 'text', v: 'Use discriminant b^2 - 4ac' }],
+    };
+    const rng = new SeededRng(12345);
+    const engine = new LearnEngine([cardWithHints], [], rng);
+
+    const prompt = engine.getNext();
+    expect(prompt?.hints).toEqual(['Recall the quadratic formula']);
+    expect(prompt?.explanation).toBe('Use discriminant b^2 - 4ac');
+    expect(engine.getExplanation('c-hint')).toBe('Use discriminant b^2 - 4ac');
+  });
+
+  it('supports non-punitive streak preservation option', () => {
+    const rng = new SeededRng(12345);
+    const engine = new LearnEngine([mockCard], [], rng, {
+      preserveStreakPartial: true,
+      decayOnMiss: 'step',
+    });
+
+    engine.getNext();
+    engine.submitAnswer('c1', { correct: true, via: 'exact' });
+    engine.getNext();
+    engine.submitAnswer('c1', { correct: true, via: 'exact' });
+    expect(engine.getProgress('c1')?.learn.streak).toBe(2);
+
+    engine.getNext();
+    engine.submitAnswer('c1', { correct: false, via: 'exact' });
+    // Streak preserved partially (decremented from 2 to 1 instead of reset to 0)
+    expect(engine.getProgress('c1')?.learn.streak).toBe(1);
+    expect(engine.getProgress('c1')?.learn.level).toBe(1);
+  });
 });

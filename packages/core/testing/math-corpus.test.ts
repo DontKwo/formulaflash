@@ -22,7 +22,7 @@ describe('math-corpus and answer checkers', () => {
           it(`ACCEPT: "${given}"${optDesc}`, () => {
             const verdict = mathChecker!.check(given, testCase.reference, options);
             expect(verdict.correct).toBe(true);
-            expect(['exact', 'normalized', 'structural']).toContain(verdict.via);
+            expect(['exact', 'normalized', 'structural', 'numeric']).toContain(verdict.via);
           });
         }
 
@@ -75,6 +75,30 @@ describe('math-corpus and answer checkers', () => {
 
     it('rejects completely different text', () => {
       const v = textChecker!.check('chloroplast', 'mitochondria');
+      expect(v.correct).toBe(false);
+    });
+  });
+
+  describe('math checker edge cases and indeterminate outcomes', () => {
+    it('returns false for empty input', () => {
+      const v = mathChecker!.check('', 'PV = nRT');
+      expect(v.correct).toBe(false);
+    });
+
+    it('returns false for variable set mismatch in equations', () => {
+      const v = mathChecker!.check('P = nRT', 'PV = nRT');
+      expect(v.correct).toBe(false);
+      expect(v.via).toBe('structural');
+    });
+
+    it('rejects equation vs expression mismatch', () => {
+      const v = mathChecker!.check('PV - nRT', 'PV = nRT');
+      expect(v.correct).toBe(false);
+      expect(v.via).toBe('structural');
+    });
+
+    it('returns indeterminate on completely unparseable input', () => {
+      const v = mathChecker!.check('\\invalid{\\broken', 'PV = nRT');
       expect(v.correct).toBe(false);
     });
   });

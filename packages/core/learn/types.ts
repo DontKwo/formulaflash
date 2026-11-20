@@ -16,6 +16,13 @@ export interface QuestionPrompt {
   progress: CardProgress;
   type: QuestionType;
   options?: string[]; // For MC
+  hints?: string[];
+  explanation?: string;
+}
+
+export interface LearnEngineOptions {
+  decayOnMiss?: 'step' | 'reset';
+  preserveStreakPartial?: boolean;
 }
 
 export interface LearnState {

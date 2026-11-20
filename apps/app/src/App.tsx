@@ -456,7 +456,7 @@ export const App: React.FC = () => {
                           style={{ fontSize: '12px', padding: '4px 8px', marginBottom: '6px' }}
                           onClick={() => setShowLearnTermsHint(!showLearnTermsHint)}
                         >
-                          {showLearnTermsHint ? 'Hide Terms Hint' : '💡 Peek Term Names & Definitions'}
+                          {showLearnTermsHint ? 'Hide Terms Hint' : 'Peek Term Names & Definitions'}
                         </button>
                         {showLearnTermsHint && (
                           <InteractiveEquation
@@ -512,16 +512,25 @@ export const App: React.FC = () => {
                     role="alert"
                   >
                     <div className="verdict-header">
-                      {verdict.correct ? '✓ Correct' : '✗ Not quite right'}
+                      {verdict.via === 'indeterminate'
+                        ? 'Inconclusive equivalence'
+                        : verdict.correct
+                        ? 'Correct'
+                        : 'Not quite right'}
                     </div>
                     <div className="verdict-detail">
                       {verdict.correct ? (
                         <span>
                           Verified via <strong>{verdict.via}</strong> equivalence
-                          {verdict.via === 'structural' && ' (algebraic AST match)'}.
+                          {verdict.via === 'structural' && ' (algebraic AST / solution match)'}.
                         </span>
                       ) : (
                         <div className="verdict-compare">
+                          {verdict.message && (
+                            <div className="verdict-message" style={{ marginBottom: '8px', fontSize: '0.9em', color: '#64748b' }}>
+                              {verdict.message}
+                            </div>
+                          )}
                           <div className="verdict-compare-box">
                             <strong>Expected Answer:</strong>
                             {effectiveTermsMode !== 'off' ? (

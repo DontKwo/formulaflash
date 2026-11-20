@@ -1,16 +1,44 @@
-import { type Card, type CardProgress, type Verdict } from '../model/index.js';
+import { type Card, type CardProgress, type Verdict, type RichContent } from '../model/index.js';
 import { type SeededRng } from './prng.js';
-import { type MasteryLevel, type QuestionPrompt, type QuestionType } from './types.js';
+import {
+  type MasteryLevel,
+  type QuestionPrompt,
+  type QuestionType,
+  type LearnEngineOptions,
+} from './types.js';
+
+function richContentToString(content?: RichContent): string {
+  if (!content || !Array.isArray(content)) return '';
+  return content
+    .map((seg) => {
+      if (seg.t === 'text') return seg.v;
+      if (seg.t === 'math') return `$${seg.latex}$`;
+      return '';
+    })
+    .join(' ')
+    .trim();
+}
 
 export class LearnEngine {
   private rng: SeededRng;
   private queue: QuestionPrompt[] = [];
   private progressMap: Map<string, CardProgress> = new Map();
   private allCards: Card[] = [];
+  private options: LearnEngineOptions;
 
-  constructor(cards: Card[], progresses: CardProgress[], rng: SeededRng) {
+  constructor(
+    cards: Card[],
+    progresses: CardProgress[],
+    rng: SeededRng,
+    options?: LearnEngineOptions
+  ) {
     this.allCards = cards;
     this.rng = rng;
+    this.options = {
+      decayOnMiss: 'step',
+      preserveStreakPartial: false,
+      ...options,
+    };
     for (const p of progresses) {
       this.progressMap.set(p.cardId, structuredClone(p));
     }
@@ -29,8 +57,6 @@ export class LearnEngine {
     });
 
     const shuffled = this.rng.shuffle(unmastered);
-
-    // Pick up to 5 cards for the current round
     const roundCards = shuffled.slice(0, 5);
 
     this.queue = roundCards.map((card) => {
@@ -50,7 +76,13 @@ export class LearnEngine {
 
   private buildPrompt(card: Card, progress: CardProgress): QuestionPrompt {
     const type = this.getQuestionTypeForLevel(progress.learn.level);
-    const prompt: QuestionPrompt = { card, progress, type };
+    const prompt: QuestionPrompt = {
+      card,
+      progress,
+      type,
+      hints: card.hints?.map(richContentToString).filter((h) => h.length > 0),
+      explanation: richContentToString(card.explanation),
+    };
     if (type === 'mc') {
       prompt.options = this.generateDistractors(card);
     }
@@ -58,11 +90,8 @@ export class LearnEngine {
   }
 
   private generateDistractors(card: Card): string[] {
-    // Basic distractors: pick up to 3 other cards' answers if possible.
     const others = this.allCards.filter((c) => c.id !== card.id);
     const shuffled = this.rng.shuffle(others).slice(0, 3);
-    // Use card id as a proxy for distractors in this simple implementation
-    // A real implementation would parse the RichContent to plain text/latex
     const options = [card.id, ...shuffled.map((c) => c.id)];
     return this.rng.shuffle(options);
   }
@@ -72,7 +101,7 @@ export class LearnEngine {
       this.refillQueue();
     }
     if (this.queue.length === 0) {
-      return null; // All mastered
+      return null;
     }
     return this.queue.shift() || null;
   }
@@ -86,13 +115,22 @@ export class LearnEngine {
       p.learn.streak += 1;
       p.learn.lastResult = 'right';
     } else {
-      p.learn.level = Math.max(0, p.learn.level - 1) as MasteryLevel;
-      p.learn.streak = 0;
+      if (this.options.decayOnMiss === 'reset') {
+        p.learn.level = 0;
+      } else {
+        p.learn.level = Math.max(0, p.learn.level - 1) as MasteryLevel;
+      }
+
+      if (this.options.preserveStreakPartial) {
+        p.learn.streak = Math.max(0, p.learn.streak - 1);
+      } else {
+        p.learn.streak = 0;
+      }
       p.learn.lastResult = 'wrong';
-      // Re-queue the missed card
-      const card = this.allCards.find(c => c.id === cardId);
+
+      const card = this.allCards.find((c) => c.id === cardId);
       if (card) {
-          this.queue.push(this.buildPrompt(card, p));
+        this.queue.push(this.buildPrompt(card, p));
       }
     }
     p.stats.seen += 1;
@@ -101,6 +139,11 @@ export class LearnEngine {
   }
 
   getProgress(cardId: string): CardProgress | undefined {
-      return this.progressMap.get(cardId);
+    return this.progressMap.get(cardId);
+  }
+
+  getExplanation(cardId: string): string | undefined {
+    const card = this.allCards.find((c) => c.id === cardId);
+    return card ? richContentToString(card.explanation) : undefined;
   }
 }

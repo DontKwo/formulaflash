@@ -81,7 +81,7 @@ export type Card = z.infer<typeof CardSchema>;
 // ---------- Study state ----------
 export const VerdictSchema = z.object({
   correct: z.boolean(),
-  via: z.enum(['exact', 'normalized', 'structural', 'numeric', 'fuzzy', 'override']),
+  via: z.enum(['exact', 'normalized', 'structural', 'numeric', 'fuzzy', 'override', 'indeterminate']),
   closeness: z.number().optional(),
   message: z.string().optional(),
 });

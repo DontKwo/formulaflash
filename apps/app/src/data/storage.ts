@@ -1,6 +1,6 @@
 import { loadCfdCompleteDeck } from './cfd-loader';
 import { CFD_GLOSSARY, type FlashcardItem } from './sample-deck';
-import type { TermDefinition } from '@formulaflash/core';
+import { STARTER_DECKS, type StarterDeck, type TermDefinition } from '@formulaflash/core';
 
 export interface FlashcardSet {
   id: string;
@@ -112,4 +112,30 @@ export function saveSetGlossary(setId: string, glossary: Record<string, TermDefi
     sets[setIndex].glossary = glossary;
     localStorage.setItem(STORAGE_KEY_SETS, JSON.stringify(sets));
   }
+}
+
+export function importStarterDeck(deckId: string): FlashcardSet | null {
+  const deck = STARTER_DECKS[deckId];
+  if (!deck) return null;
+  const set: FlashcardSet = {
+    id: deck.id,
+    name: deck.title,
+    category: deck.category,
+    cards: deck.cards.map((c) => ({
+      id: c.id,
+      category: c.category,
+      title: c.title,
+      prompt: c.prompt,
+      latexAnswer: c.latexAnswer,
+      hint: c.hint ?? '',
+      explanation: c.explanation,
+    })),
+    isDefault: true,
+  };
+  saveSet(set);
+  return set;
+}
+
+export function getAvailableStarterDecks(): StarterDeck[] {
+  return Object.values(STARTER_DECKS);
 }
