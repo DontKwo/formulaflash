@@ -19,7 +19,9 @@ export type RichContent = z.infer<typeof RichContentSchema>;
 export const TermDefinitionSchema = z.object({
   symbol: z.string().min(1).max(256),
   name: z.string().max(256).optional(),
+  shortName: z.string().max(128).optional(),
   definition: z.string().max(4096).optional(),
+  shortDefinition: z.string().max(512).optional(),
   units: z.string().max(128).optional(),
   note: z.string().max(2048).optional(),
 });
@@ -136,7 +138,9 @@ export function sanitizeTermDefinition(term: TermDefinition): TermDefinition {
   return {
     symbol: term.symbol.trim(),
     name: sanitizePlainText(term.name),
+    shortName: sanitizePlainText(term.shortName),
     definition: sanitizePlainText(term.definition),
+    shortDefinition: sanitizePlainText(term.shortDefinition),
     units: sanitizePlainText(term.units),
     note: sanitizePlainText(term.note),
   };

@@ -97,4 +97,22 @@ describe('detectFormulaTerms', () => {
     expect(diff.missing).not.toContain('P');
     expect(diff.missing).not.toContain('V');
   });
+
+  it('does not capture trailing delimiters or punctuation on subscripted terms', () => {
+    const partialTerms = detectFormulaTerms('\\frac{\\partial u_i}{\\partial x_j}');
+    expect(partialTerms).toContain('u_i');
+    expect(partialTerms).toContain('x_j');
+    expect(partialTerms).not.toContain('u_i}');
+    expect(partialTerms).not.toContain('x_j}');
+
+    const vecTerms = detectFormulaTerms('\\vec{X}(\\vec{X}_0, t) + (\\vec{u} - \\vec{u}_b)');
+    expect(vecTerms).toContain('\\vec{X}');
+    expect(vecTerms).toContain('\\vec{X}_0');
+    expect(vecTerms).toContain('\\vec{u}');
+    expect(vecTerms).toContain('\\vec{u}_b');
+    expect(vecTerms).toContain('t');
+    expect(vecTerms.some((t) => /[,)]$/.test(t))).toBe(false);
+
+    expect(normalizeSymbolKey("\\overline{u'_i u'_i}")).toBe("\\overline{u'_{i} u'_{i}}");
+  });
 });

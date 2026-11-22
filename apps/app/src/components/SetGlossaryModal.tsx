@@ -1,7 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import type { TermDefinition } from '@formulaflash/core';
 import { normalizeSymbolKey, getSuggestionsForSymbol } from '@formulaflash/core';
-import { MathDisplay } from './MathDisplay.tsx';
+import { MathDisplay, MathText } from './MathDisplay.tsx';
 import type { FlashcardSet } from '../data/storage.ts';
 
 export interface SetGlossaryModalProps {
@@ -22,7 +22,11 @@ export const SetGlossaryModal: React.FC<SetGlossaryModalProps> = ({
   const [filterUndefinedOnly, setFilterUndefinedOnly] = useState(false);
   const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
 
-  // Collect all distinct symbols used across cards in the set and their usage count
+  useEffect(() => {
+    setGlossary(activeSet.glossary || {});
+    setSelectedSymbol(null);
+  }, [activeSet.id, activeSet.glossary]);
+
   const setSymbolStats = useMemo(() => {
     const counts = new Map<string, { symbol: string; count: number; cards: string[] }>();
 
@@ -38,7 +42,6 @@ export const SetGlossaryModal: React.FC<SetGlossaryModalProps> = ({
       }
     }
 
-    // Also include any glossary symbols that might not be on current cards
     for (const [key, term] of Object.entries(glossary)) {
       const k = normalizeSymbolKey(key);
       if (!counts.has(k)) {
@@ -60,6 +63,7 @@ export const SetGlossaryModal: React.FC<SetGlossaryModalProps> = ({
       return (
         item.symbol.toLowerCase().includes(q) ||
         (term?.name && term.name.toLowerCase().includes(q)) ||
+        (term?.shortName && term.shortName.toLowerCase().includes(q)) ||
         (term?.definition && term.definition.toLowerCase().includes(q))
       );
     });
@@ -95,14 +99,14 @@ export const SetGlossaryModal: React.FC<SetGlossaryModalProps> = ({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="modal-content" style={{ maxWidth: '820px', width: '95vw', maxHeight: '90vh' }}>
+      <div className="modal-content" style={{ maxWidth: '860px', width: '95vw', maxHeight: '90vh' }}>
         <div className="modal-header">
           <div>
             <h2 id="set-glossary-dialog-title" className="modal-title">
               Deck Glossary: {activeSet.name}
             </h2>
             <span className="settings-desc">
-              Define recurring symbols once for the entire deck. Cards can override glossary definitions.
+              Per-deck symbol glossary isolated to this deck. Changes apply only to "{activeSet.name}".
             </span>
           </div>
           <button
@@ -112,20 +116,20 @@ export const SetGlossaryModal: React.FC<SetGlossaryModalProps> = ({
             onClick={onClose}
             aria-label="Close glossary modal"
           >
-            ×
+            x
           </button>
         </div>
 
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', margin: '12px 0' }}>
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', margin: '4px 0' }}>
           <input
             type="text"
             data-testid="glossary-search-input"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search symbols or definitions..."
+            placeholder="Search symbols or definitions in this deck..."
             style={{ flex: 1 }}
           />
-          <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', cursor: 'pointer' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
             <input
               type="checkbox"
               data-testid="glossary-undefined-filter"
@@ -140,10 +144,10 @@ export const SetGlossaryModal: React.FC<SetGlossaryModalProps> = ({
           <div className="set-list" role="listbox" aria-label="Deck Symbols">
             {filteredSymbols.length === 0 ? (
               <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-secondary)' }}>
-                No symbols found.
+                No symbols defined for this deck yet.
               </div>
             ) : (
-              filteredSymbols.map((item, idx) => {
+              filteredSymbols.slice(0, 120).map((item, idx) => {
                 const term = glossary[normalizeSymbolKey(item.symbol)];
                 const isSelected = selectedSymbol === item.symbol;
                 return (
@@ -154,20 +158,24 @@ export const SetGlossaryModal: React.FC<SetGlossaryModalProps> = ({
                     onClick={() => setSelectedSymbol(item.symbol)}
                     style={{ cursor: 'pointer', padding: '10px 14px' }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
                       <div style={{ minWidth: '40px', fontSize: '18px', fontWeight: 600 }}>
                         <MathDisplay latex={item.symbol} display={false} />
                       </div>
-                      <div>
+                      <div style={{ minWidth: 0 }}>
                         <div style={{ fontWeight: 600, fontSize: '14px' }}>
-                          {term?.name || <span style={{ color: 'var(--error)' }}>Undefined symbol</span>}
+                          {term?.name ? (
+                            <MathText text={term.name} />
+                          ) : (
+                            <span style={{ color: 'var(--error)' }}>Undefined symbol</span>
+                          )}
                         </div>
                         <div style={{ fontSize: '12px', color: 'var(--text-secondary)', maxWidth: '240px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {term?.definition || 'Click to add definition'}
+                          <MathText text={term?.definition || 'Click to add definition'} />
                         </div>
                       </div>
                     </div>
-                    <div style={{ textAlign: 'right' }}>
+                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
                       <span className="deck-tag" style={{ fontSize: '11px' }}>
                         {item.count} cards
                       </span>
@@ -179,7 +187,7 @@ export const SetGlossaryModal: React.FC<SetGlossaryModalProps> = ({
           </div>
 
           {selectedSymbol && activeTerm && (
-            <div className="modal-form" style={{ padding: '16px', backgroundColor: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)' }}>
+            <div className="modal-form" style={{ padding: '16px', backgroundColor: 'var(--bg-card-secondary)', border: '1px solid var(--border)', borderRadius: '12px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <span>Edit Symbol:</span>
@@ -189,7 +197,7 @@ export const SetGlossaryModal: React.FC<SetGlossaryModalProps> = ({
                   type="button"
                   data-testid="glossary-delete-term-btn"
                   className="btn-danger"
-                  style={{ minHeight: '30px', height: '30px', padding: '0 8px', fontSize: '12px' }}
+                  style={{ minHeight: '30px', height: '30px', padding: '0 8px', fontSize: '12px', flex: 'none' }}
                   onClick={() => handleDeleteTerm(activeTerm.symbol)}
                 >
                   Delete
@@ -198,7 +206,7 @@ export const SetGlossaryModal: React.FC<SetGlossaryModalProps> = ({
 
               {suggestions.length > 0 && (
                 <div style={{ marginTop: '8px' }}>
-                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Suggestions:</span>
+                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Quick fill:</span>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
                     {suggestions.map((sugg, i) => (
                       <button
@@ -206,9 +214,10 @@ export const SetGlossaryModal: React.FC<SetGlossaryModalProps> = ({
                         type="button"
                         data-testid={`glossary-suggestion-${i}`}
                         className="toolbar-btn"
-                        style={{ fontSize: '12px', padding: '4px 8px', height: 'auto' }}
+                        style={{ fontSize: '12px', padding: '4px 8px', height: 'auto', minHeight: '30px' }}
                         onClick={() =>
                           handleUpdateTerm({
+                            ...activeTerm,
                             symbol: activeTerm.symbol,
                             name: sugg.name,
                             definition: sugg.definition,
@@ -241,18 +250,41 @@ export const SetGlossaryModal: React.FC<SetGlossaryModalProps> = ({
                   value={activeTerm.definition || ''}
                   onChange={(e) => handleUpdateTerm({ ...activeTerm, definition: e.target.value })}
                   placeholder="Comprehensive definition..."
-                  rows={3}
+                  rows={2}
                 />
               </div>
 
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '8px' }}>
+                <div className="input-group">
+                  <label>Short Label (Cheat Sheet)</label>
+                  <input
+                    type="text"
+                    data-testid="glossary-short-name-input"
+                    value={activeTerm.shortName || ''}
+                    onChange={(e) => handleUpdateTerm({ ...activeTerm, shortName: e.target.value })}
+                    placeholder="e.g. Kin visc"
+                  />
+                </div>
+                <div className="input-group">
+                  <label>Units</label>
+                  <input
+                    type="text"
+                    data-testid="glossary-units-input"
+                    value={activeTerm.units || ''}
+                    onChange={(e) => handleUpdateTerm({ ...activeTerm, units: e.target.value })}
+                    placeholder="e.g. m^2/s"
+                  />
+                </div>
+              </div>
+
               <div className="input-group" style={{ marginTop: '8px' }}>
-                <label>Units</label>
+                <label>Short Definition (Cheat Sheet)</label>
                 <input
                   type="text"
-                  data-testid="glossary-units-input"
-                  value={activeTerm.units || ''}
-                  onChange={(e) => handleUpdateTerm({ ...activeTerm, units: e.target.value })}
-                  placeholder="e.g. m^2/s"
+                  data-testid="glossary-short-definition-input"
+                  value={activeTerm.shortDefinition || ''}
+                  onChange={(e) => handleUpdateTerm({ ...activeTerm, shortDefinition: e.target.value })}
+                  placeholder="Concise 3-6 word cheat sheet version"
                 />
               </div>
 
@@ -261,21 +293,22 @@ export const SetGlossaryModal: React.FC<SetGlossaryModalProps> = ({
                   type="button"
                   data-testid="glossary-copy-to-cards-btn"
                   className="btn-secondary"
-                  style={{ fontSize: '12px', padding: '6px 12px' }}
+                  style={{ fontSize: '12px', padding: '6px 12px', minHeight: '36px' }}
                   onClick={() => onApplyDefinitionToCards(activeTerm.symbol, activeTerm)}
                 >
-                  Copy Definition to Cards Lacking One
+                  Apply to Cards in This Deck
                 </button>
               </div>
             </div>
           )}
         </div>
 
-        <div className="modal-actions" style={{ marginTop: '16px', justifyContent: 'flex-end' }}>
+        <div className="modal-actions" style={{ marginTop: '8px', justifyContent: 'flex-end' }}>
           <button
             type="button"
             data-testid="glossary-done-btn"
             className="btn-primary"
+            style={{ flex: 'none', minWidth: '120px' }}
             onClick={onClose}
           >
             Done

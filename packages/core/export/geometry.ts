@@ -15,8 +15,8 @@ export const PAGE_SIZES_PT: Record<Exclude<PageSizeName, 'custom'>, { width: num
 };
 
 export const MARGIN_PRESETS_PT: Record<Exclude<MarginPreset, 'custom'>, Margins> = {
-  narrow: { top: 20, right: 20, bottom: 20, left: 20 },
-  normal: { top: 36, right: 36, bottom: 36, left: 36 },
+  narrow: { top: 28, right: 20, bottom: 28, left: 20 },
+  normal: { top: 38, right: 36, bottom: 38, left: 36 },
   wide: { top: 54, right: 54, bottom: 54, left: 54 },
 };
 
@@ -56,26 +56,55 @@ export function getMargins(preset: MarginPreset, custom?: Margins): Margins {
   return MARGIN_PRESETS_PT[preset];
 }
 
-// Approximate character widths per font at 1pt (in points)
-// Used for pure TS text wrapping without DOM
+// Conservative character widths per font at 1pt so text never clips past container edges
 const CHAR_WIDTH_APPROX: Record<string, number> = {
-  Helvetica: 0.52,
-  Times: 0.48,
-  Courier: 0.60,
+  Helvetica: 0.56,
+  Times: 0.53,
+  Courier: 0.62,
 };
 
-export function measureTextWidth(text: string, fontSize: number, fontFamily: string): number {
-  const factor = CHAR_WIDTH_APPROX[fontFamily] || 0.52;
-  return text.length * fontSize * factor;
+export function measureTextWidth(
+  text: string,
+  fontSize: number,
+  fontFamily: string,
+  isBold: boolean = false
+): number {
+  const factor = CHAR_WIDTH_APPROX[fontFamily] || 0.56;
+  const weightMult = isBold ? 1.08 : 1.0;
+  return text.length * fontSize * factor * weightMult;
+}
+
+function splitOverlongToken(
+  token: string,
+  maxWidth: number,
+  fontSize: number,
+  fontFamily: string,
+  isBold: boolean
+): string[] {
+  const chunks: string[] = [];
+  let buf = '';
+  for (const ch of token) {
+    const candidate = buf + ch;
+    if (buf.length > 0 && measureTextWidth(candidate, fontSize, fontFamily, isBold) > maxWidth) {
+      chunks.push(buf);
+      buf = ch;
+    } else {
+      buf = candidate;
+    }
+  }
+  if (buf) chunks.push(buf);
+  return chunks.length > 0 ? chunks : [token];
 }
 
 export function wrapText(
   text: string,
   maxWidth: number,
   fontSize: number,
-  fontFamily: string
+  fontFamily: string,
+  isBold: boolean = false
 ): string[] {
   if (!text) return [];
+  const safeWidth = Math.max(20, maxWidth);
   const lines: string[] = [];
   const rawParagraphs = text.split('\n');
 
@@ -84,22 +113,27 @@ export function wrapText(
       lines.push('');
       continue;
     }
-    const words = para.split(' ');
+    const words = para.split(/\s+/);
     let currentLine = '';
 
     for (const word of words) {
+      if (!word) continue;
       const candidate = currentLine ? `${currentLine} ${word}` : word;
-      const width = measureTextWidth(candidate, fontSize, fontFamily);
-      if (width <= maxWidth) {
+      if (measureTextWidth(candidate, fontSize, fontFamily, isBold) <= safeWidth) {
         currentLine = candidate;
       } else {
         if (currentLine) {
           lines.push(currentLine);
-          currentLine = word;
-        } else {
-          // Word itself is wider than line, hard slice
-          lines.push(word);
           currentLine = '';
+        }
+        if (measureTextWidth(word, fontSize, fontFamily, isBold) > safeWidth) {
+          const chunks = splitOverlongToken(word, safeWidth, fontSize, fontFamily, isBold);
+          for (let cIdx = 0; cIdx < chunks.length - 1; cIdx++) {
+            lines.push(chunks[cIdx]);
+          }
+          currentLine = chunks[chunks.length - 1];
+        } else {
+          currentLine = word;
         }
       }
     }
@@ -109,6 +143,40 @@ export function wrapText(
   }
 
   return lines;
+}
+
+/**
+ * Normalizes LaTeX notation inside plain PDF text runs (titles, prompts, term descriptions)
+ * so standard Type1 PDF fonts never print raw backslashes or broken braces.
+ */
+export function formatLatexForPdfText(text: string): string {
+  if (!text) return '';
+  return text
+    .replace(/\$/g, '')
+    .replace(/\\text\{([^{}]+)\}/g, '$1')
+    .replace(/\\mathrm\{([^{}]+)\}/g, '$1')
+    .replace(/\\mathcal\{([^{}]+)\}/g, '$1')
+    .replace(/\\(?:mathbf|boldsymbol|vec|hat|bar|tilde|overline|underline)\{([^{}]+)\}/g, '$1')
+    .replace(/\\dot\{([^{}]+)\}/g, 'd$1/dt')
+    .replace(/\\ddot\{([^{}]+)\}/g, 'd^2$1/dt^2')
+    .replace(/\\frac\{([^{}]+)\}\{([^{}]+)\}/g, '($1)/($2)')
+    .replace(/\\left\(/g, '(')
+    .replace(/\\right\)/g, ')')
+    .replace(/\\left/g, '')
+    .replace(/\\right/g, '')
+    .replace(/\\begin\{[^}]+\}|\\end\{[^}]+\}/g, '')
+    .replace(/\\(neq|ne)\b/g, '!=')
+    .replace(/\\(leq|le)\b/g, '<=')
+    .replace(/\\(geq|ge)\b/g, '>=')
+    .replace(/\\approx\b/g, '~=')
+    .replace(/\\infty\b/g, 'inf')
+    .replace(/\\times\b/g, 'x')
+    .replace(/\\cdot\b/g, '*')
+    .replace(/\\,/g, ' ')
+    .replace(/\\([a-zA-Z]+)/g, '$1')
+    .replace(/[{}]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 export interface ColorPalette {

@@ -2,7 +2,7 @@ import React from 'react';
 import type { FlashcardItem } from '../data/sample-deck.ts';
 import type { TermDefinition } from '@formulaflash/core';
 import { InteractiveEquation } from './InteractiveEquation.tsx';
-import { MathDisplay } from './MathDisplay.tsx';
+import { MathDisplay, MathText } from './MathDisplay.tsx';
 
 export interface FlashcardViewerProps {
   card: FlashcardItem;
@@ -26,7 +26,7 @@ export const FlashcardViewer: React.FC<FlashcardViewerProps> = ({
   return (
     <div
       className="flashcard-viewer-container"
-      style={{ perspective: '1000px', width: '100%', marginBottom: '20px' }}
+      style={{ perspective: '1000px', width: '100%', maxWidth: '100%', marginBottom: '20px' }}
     >
       <div
         className="flashcard-inner"
@@ -34,8 +34,9 @@ export const FlashcardViewer: React.FC<FlashcardViewerProps> = ({
         style={{
           position: 'relative',
           width: '100%',
+          maxWidth: '100%',
           minHeight: '280px',
-          transition: 'transform 0.5s ease',
+          transition: 'transform 0.45s cubic-bezier(0.22, 1, 0.36, 1)',
           transformStyle: 'preserve-3d',
           transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
           cursor: 'pointer',
@@ -43,7 +44,11 @@ export const FlashcardViewer: React.FC<FlashcardViewerProps> = ({
         onClick={onFlip}
         role="button"
         tabIndex={0}
-        aria-label={isFlipped ? 'Card back showing equation. Tap to flip to question.' : 'Card front showing question. Tap to flip for equation.'}
+        aria-label={
+          isFlipped
+            ? 'Card back showing equation. Tap to flip to question.'
+            : 'Card front showing question. Tap to flip for equation.'
+        }
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
@@ -64,13 +69,16 @@ export const FlashcardViewer: React.FC<FlashcardViewerProps> = ({
           }}
         >
           <div className="card-body">
-            <h2 className="card-title">{card.title}</h2>
-            <p className="card-prompt">{card.prompt}</p>
+            <h2 className="card-title">
+              <MathText text={card.title} />
+            </h2>
+            <p className="card-prompt">
+              <MathText text={card.prompt} />
+            </p>
 
-            {/* If Hint before answer is chosen, offer hints/terms peek without flipping */}
             {termDefinitionsMode === 'hint-before-answer' && (
               <div
-                style={{ marginTop: '16px', width: '100%' }}
+                style={{ marginTop: '16px', width: '100%', minWidth: 0 }}
                 onClick={(e) => e.stopPropagation()}
               >
                 <InteractiveEquation
@@ -104,8 +112,7 @@ export const FlashcardViewer: React.FC<FlashcardViewerProps> = ({
             visibility: isFlipped ? 'visible' : 'hidden',
           }}
           onClick={(e) => {
-            // Prevent flipping if interacting with terms or buttons on the back
-            if ((e.target as HTMLElement).closest('button, input, textarea, .interactive-equation-container')) {
+            if ((e.target as HTMLElement).closest('button, input, textarea, .interactive-equation-container, .card-math-hero')) {
               e.stopPropagation();
             }
           }}
@@ -115,9 +122,8 @@ export const FlashcardViewer: React.FC<FlashcardViewerProps> = ({
               Target Equation
             </span>
 
-            {/* Interactive Equation on card back: if off, render clean standard MathDisplay */}
             {showTerms ? (
-              <div style={{ width: '100%' }}>
+              <div style={{ width: '100%', minWidth: 0 }}>
                 <InteractiveEquation
                   latex={card.latexAnswer}
                   cardTerms={card.terms}
@@ -135,7 +141,7 @@ export const FlashcardViewer: React.FC<FlashcardViewerProps> = ({
             {card.explanation && (
               <div className="card-explanation" style={{ marginTop: '12px' }}>
                 <strong>Explanation: </strong>
-                {card.explanation}
+                <MathText text={card.explanation} />
               </div>
             )}
 

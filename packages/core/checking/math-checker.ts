@@ -73,6 +73,10 @@ export class MathChecker implements AnswerChecker {
       return { correct: false, via: 'normalized', message: 'Empty expression' };
     }
 
+    if (given.length > 4000 || expected.length > 4000) {
+      return { correct: false, via: 'normalized', message: 'Expression exceeds length limit' };
+    }
+
     if (given === expected) {
       return { correct: true, via: 'exact' };
     }

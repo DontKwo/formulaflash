@@ -13,8 +13,7 @@ export interface RenderedFormulaGraphic {
 const formulaCache = new Map<string, RenderedFormulaGraphic>();
 
 /**
- * Parses and generates SVG or canvas representation of a formula.
- * Caches by (latex, fontSize, color).
+ * Parses and generates PNG graphic of a rendered KaTeX formula with safe padding.
  */
 export async function renderFormulaGraphic(
   latex: string,
@@ -28,15 +27,14 @@ export async function renderFormulaGraphic(
   }
 
   try {
-    const mathmlHtml = katex.renderToString(latex, {
+    const renderedHtml = katex.renderToString(latex, {
       displayMode: true,
       throwOnError: true,
-      output: 'htmlAndMathml',
+      output: 'html',
     });
 
     const isBrowser = typeof window !== 'undefined' && typeof document !== 'undefined';
     if (!isBrowser) {
-      // In Node environment / SSR:
       const fallback: RenderedFormulaGraphic = {
         width: Math.max(40, latex.length * fontSize * 0.6),
         height: fontSize * 1.8,
@@ -47,23 +45,23 @@ export async function renderFormulaGraphic(
       return fallback;
     }
 
-    // Convert KaTeX rendered HTML to an offscreen image via SVG foreignObject or HTML element
     const container = document.createElement('div');
     container.style.position = 'absolute';
     container.style.visibility = 'hidden';
     container.style.top = '-9999px';
     container.style.left = '-9999px';
+    container.style.display = 'inline-block';
+    container.style.padding = '6px 10px';
     container.style.fontSize = `${fontSize}pt`;
     container.style.color = color;
-    container.innerHTML = mathmlHtml;
+    container.innerHTML = renderedHtml;
     document.body.appendChild(container);
 
     const rect = container.getBoundingClientRect();
-    const naturalWidth = Math.max(30, rect.width);
-    const naturalHeight = Math.max(16, rect.height);
+    const naturalWidth = Math.max(36, Math.ceil(rect.width) + 6);
+    const naturalHeight = Math.max(20, Math.ceil(rect.height) + 6);
     document.body.removeChild(container);
 
-    // Rasterize crisp 300 DPI canvas
     const scale = dpi / 72;
     const canvas = document.createElement('canvas');
     canvas.width = Math.ceil(naturalWidth * scale);
@@ -73,12 +71,11 @@ export async function renderFormulaGraphic(
     let pngUri: string | undefined;
 
     if (ctx) {
-      // Create SVG foreignObject blob image
       const svgString = `
         <svg xmlns="http://www.w3.org/2000/svg" width="${naturalWidth}" height="${naturalHeight}">
           <foreignObject width="100%" height="100%">
-            <div xmlns="http://www.w3.org/1999/xhtml" style="color:${color};font-size:${fontSize}pt;">
-              ${mathmlHtml}
+            <div xmlns="http://www.w3.org/1999/xhtml" style="color:${color};font-size:${fontSize}pt;padding:6px 10px;display:inline-block;">
+              ${renderedHtml}
             </div>
           </foreignObject>
         </svg>
@@ -104,7 +101,7 @@ export async function renderFormulaGraphic(
       try {
         pngUri = canvas.toDataURL('image/png');
       } catch {
-        // Fallback
+        // Fallback to plain text drawing if tainted canvas
       }
     }
 

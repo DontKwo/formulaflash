@@ -154,6 +154,13 @@ test.describe('UI Matrix Layer', () => {
   for (const [idx, formula] of corpus.formulaCorpus.trivial.slice(0, 5).entries()) {
     test(`@matrix Learn check with formula variant #${idx}: ${formula}`, async ({ page }) => {
       await page.goto('/');
+      const switchBtn = page.locator('[data-testid="learn-switch-write-btn"]');
+      if (await switchBtn.isVisible()) {
+        const label = await switchBtn.innerText();
+        if (label.includes('Write Mode')) {
+          await switchBtn.click();
+        }
+      }
       await page.waitForSelector('[data-testid="learn-answer-input"]');
 
       // Set mathfield value and dispatch input event so React state syncs

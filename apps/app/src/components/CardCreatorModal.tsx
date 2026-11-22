@@ -8,6 +8,7 @@ import {
   diffTerms,
   getSuggestionsForSymbol,
   normalizeSymbolKey,
+  resolveCardTerm,
 } from '@formulaflash/core';
 
 export interface CardCreatorModalProps {
@@ -18,6 +19,8 @@ export interface CardCreatorModalProps {
   onBulkAdd?: (cards: FlashcardItem[]) => void;
   onDeleteCard?: (cardId: string) => void;
   onApplyTermToSetGlossary?: (term: TermDefinition) => void;
+  setGlossary?: Record<string, TermDefinition>;
+  deckName?: string;
 }
 
 interface MathToolbarCategory {
@@ -30,58 +33,58 @@ const TOOLBAR_CATEGORIES: MathToolbarCategory[] = [
     name: 'Basics',
     items: [
       { label: 'a/b', snippet: '\\frac{a}{b}', title: 'Fraction' },
-      { label: 'xⁿ', snippet: '^{n}', title: 'Exponent' },
-      { label: 'xₙ', snippet: '_{n}', title: 'Subscript' },
-      { label: '√x', snippet: '\\sqrt{x}', title: 'Square Root' },
-      { label: '·', snippet: ' \\cdot ', title: 'Multiply' },
-      { label: '×', snippet: ' \\times ', title: 'Cross / Multiply' },
-      { label: '±', snippet: '\\pm ', title: 'Plus-Minus' },
-      { label: '≈', snippet: '\\approx ', title: 'Approximately' },
-      { label: '≤', snippet: '\\leq ', title: 'Less Than or Equal' },
-      { label: '≥', snippet: '\\geq ', title: 'Greater Than or Equal' },
+      { label: 'x^n', snippet: '^{n}', title: 'Exponent' },
+      { label: 'x_n', snippet: '_{n}', title: 'Subscript' },
+      { label: 'sqrt', snippet: '\\sqrt{x}', title: 'Square Root' },
+      { label: '*', snippet: ' \\cdot ', title: 'Multiply' },
+      { label: 'x', snippet: ' \\times ', title: 'Cross / Multiply' },
+      { label: '+/-', snippet: '\\pm ', title: 'Plus-Minus' },
+      { label: '~=', snippet: '\\approx ', title: 'Approximately' },
+      { label: '<=', snippet: '\\leq ', title: 'Less Than or Equal' },
+      { label: '>=', snippet: '\\geq ', title: 'Greater Than or Equal' },
       { label: '( )', snippet: '()', title: 'Parentheses' },
     ],
   },
   {
     name: 'Calculus & Vectors',
     items: [
-      { label: '∫', snippet: '\\int ', title: 'Integral' },
-      { label: '∑', snippet: '\\sum ', title: 'Summation' },
-      { label: '∂', snippet: '\\partial ', title: 'Partial Derivative' },
-      { label: '∇', snippet: '\\nabla ', title: 'Nabla / Del' },
-      { label: 'x̂', snippet: '\\hat{x}', title: 'Hat / Unit Vector' },
-      { label: 'x̄', snippet: '\\bar{x}', title: 'Bar / Mean' },
-      { label: 'v⃗', snippet: '\\vec{v}', title: 'Vector Arrow' },
-      { label: 'ẋ', snippet: '\\dot{x}', title: 'Time Derivative (dot)' },
-      { label: 'Δ', snippet: '\\Delta ', title: 'Delta / Change' },
+      { label: 'int', snippet: '\\int ', title: 'Integral' },
+      { label: 'sum', snippet: '\\sum ', title: 'Summation' },
+      { label: 'd/dx', snippet: '\\partial ', title: 'Partial Derivative' },
+      { label: 'del', snippet: '\\nabla ', title: 'Nabla / Del' },
+      { label: 'x-hat', snippet: '\\hat{x}', title: 'Hat / Unit Vector' },
+      { label: 'x-bar', snippet: '\\bar{x}', title: 'Bar / Mean' },
+      { label: 'vec', snippet: '\\vec{v}', title: 'Vector Arrow' },
+      { label: 'x-dot', snippet: '\\dot{x}', title: 'Time Derivative (dot)' },
+      { label: 'Delta', snippet: '\\Delta ', title: 'Delta / Change' },
     ],
   },
   {
     name: 'Greek & Symbols',
     items: [
-      { label: 'π', snippet: '\\pi ', title: 'Pi' },
-      { label: 'θ', snippet: '\\theta ', title: 'Theta' },
-      { label: 'ρ', snippet: '\\rho ', title: 'Rho' },
-      { label: 'α', snippet: '\\alpha ', title: 'Alpha' },
-      { label: 'β', snippet: '\\beta ', title: 'Beta' },
-      { label: 'γ', snippet: '\\gamma ', title: 'Gamma' },
-      { label: 'λ', snippet: '\\lambda ', title: 'Lambda' },
-      { label: 'μ', snippet: '\\mu ', title: 'Mu' },
-      { label: 'σ', snippet: '\\sigma ', title: 'Sigma' },
-      { label: 'ω', snippet: '\\omega ', title: 'Omega' },
-      { label: '∞', snippet: '\\infty ', title: 'Infinity' },
+      { label: 'pi', snippet: '\\pi ', title: 'Pi' },
+      { label: 'theta', snippet: '\\theta ', title: 'Theta' },
+      { label: 'rho', snippet: '\\rho ', title: 'Rho' },
+      { label: 'alpha', snippet: '\\alpha ', title: 'Alpha' },
+      { label: 'beta', snippet: '\\beta ', title: 'Beta' },
+      { label: 'gamma', snippet: '\\gamma ', title: 'Gamma' },
+      { label: 'lambda', snippet: '\\lambda ', title: 'Lambda' },
+      { label: 'mu', snippet: '\\mu ', title: 'Mu' },
+      { label: 'sigma', snippet: '\\sigma ', title: 'Sigma' },
+      { label: 'omega', snippet: '\\omega ', title: 'Omega' },
+      { label: 'inf', snippet: '\\infty ', title: 'Infinity' },
     ],
   },
   {
     name: 'Matrices',
     items: [
       {
-        label: '2×2',
+        label: '2x2',
         snippet: '\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}',
         title: '2x2 Matrix',
       },
       {
-        label: 'Vector',
+        label: 'Vec',
         snippet: '\\begin{pmatrix} x \\\\ y \\end{pmatrix}',
         title: 'Column Vector',
       },
@@ -97,28 +100,29 @@ export const CardCreatorModal: React.FC<CardCreatorModalProps> = ({
   initialCard,
   onBulkAdd,
   onApplyTermToSetGlossary,
+  setGlossary,
+  deckName,
 }) => {
   const [activeTab, setActiveTab] = useState<'single' | 'bulk'>('single');
   const [activeCategory, setActiveCategory] = useState<string>('Basics');
 
-  // Single card form fields
   const [title, setTitle] = useState(initialCard?.title || '');
   const [category, setCategory] = useState(initialCard?.category || '');
   const [prompt, setPrompt] = useState(initialCard?.prompt || '');
+  const [shortPrompt, setShortPrompt] = useState(initialCard?.shortPrompt || '');
   const [latexAnswer, setLatexAnswer] = useState(initialCard?.latexAnswer || '');
   const [hint, setHint] = useState(initialCard?.hint || '');
+  const [cheatSheetNote, setCheatSheetNote] = useState(initialCard?.cheatSheetNote || '');
   const [explanation, setExplanation] = useState(initialCard?.explanation || '');
   const [terms, setTerms] = useState<TermDefinition[]>(initialCard?.terms || []);
   const [manualSymbolInput, setManualSymbolInput] = useState('');
 
-  // Bulk add state
   const [bulkText, setBulkText] = useState('');
-  const [bulkDelimiter, setBulkDelimiter] = useState('\t'); // tab default (Quizlet paste)
+  const [bulkDelimiter, setBulkDelimiter] = useState('\t');
   const [validationError, setValidationError] = useState<string | null>(null);
 
   const mathInputRef = useRef<HTMLTextAreaElement>(null);
 
-  // Restore draft if creating a new card
   useEffect(() => {
     if (!initialCard) {
       const draft = localStorage.getItem(DRAFT_KEY);
@@ -128,8 +132,10 @@ export const CardCreatorModal: React.FC<CardCreatorModalProps> = ({
           if (parsed.title) setTitle(parsed.title);
           if (parsed.category) setCategory(parsed.category);
           if (parsed.prompt) setPrompt(parsed.prompt);
+          if (parsed.shortPrompt) setShortPrompt(parsed.shortPrompt);
           if (parsed.latexAnswer) setLatexAnswer(parsed.latexAnswer);
           if (parsed.hint) setHint(parsed.hint);
+          if (parsed.cheatSheetNote) setCheatSheetNote(parsed.cheatSheetNote);
           if (parsed.explanation) setExplanation(parsed.explanation);
           if (parsed.terms) setTerms(parsed.terms);
         } catch {
@@ -139,17 +145,25 @@ export const CardCreatorModal: React.FC<CardCreatorModalProps> = ({
     }
   }, [initialCard]);
 
-  // Autosave draft on change
   useEffect(() => {
     if (!initialCard && (title || prompt || latexAnswer)) {
       localStorage.setItem(
         DRAFT_KEY,
-        JSON.stringify({ title, category, prompt, latexAnswer, hint, explanation, terms })
+        JSON.stringify({
+          title,
+          category,
+          prompt,
+          shortPrompt,
+          latexAnswer,
+          hint,
+          cheatSheetNote,
+          explanation,
+          terms,
+        })
       );
     }
-  }, [title, category, prompt, latexAnswer, hint, explanation, terms, initialCard]);
+  }, [title, category, prompt, shortPrompt, latexAnswer, hint, cheatSheetNote, explanation, terms, initialCard]);
 
-  // Validate KaTeX syntax live
   useEffect(() => {
     if (!latexAnswer.trim()) {
       setValidationError(null);
@@ -160,12 +174,10 @@ export const CardCreatorModal: React.FC<CardCreatorModalProps> = ({
       setValidationError(null);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
-      const friendly = msg.replace('KaTeX parse error: ', '');
-      setValidationError(friendly);
+      setValidationError(msg.replace('KaTeX parse error: ', ''));
     }
   }, [latexAnswer]);
 
-  // ESC to close
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent): void => {
       if (e.key === 'Escape') onClose();
@@ -185,8 +197,7 @@ export const CardCreatorModal: React.FC<CardCreatorModalProps> = ({
     const end = textarea.selectionEnd;
     const before = latexAnswer.substring(0, start);
     const after = latexAnswer.substring(end);
-    const nextVal = before + snippet + after;
-    setLatexAnswer(nextVal);
+    setLatexAnswer(before + snippet + after);
 
     setTimeout(() => {
       textarea.focus();
@@ -195,7 +206,6 @@ export const CardCreatorModal: React.FC<CardCreatorModalProps> = ({
     }, 10);
   };
 
-  // Term detection & diffing
   const diff = diffTerms(latexAnswer, terms);
   const definedCount = terms.filter((t) => t.definition && t.definition.trim().length > 0).length;
 
@@ -206,12 +216,15 @@ export const CardCreatorModal: React.FC<CardCreatorModalProps> = ({
     for (const sym of detected) {
       const k = normalizeSymbolKey(sym);
       if (!nextTerms.some((t) => normalizeSymbolKey(t.symbol) === k)) {
-        const suggestions = getSuggestionsForSymbol(sym);
-        const best = suggestions[0];
+        // Resolve from active deck's isolated glossary first, then general physical suggestions
+        const deckEntry = resolveCardTerm(sym, undefined, setGlossary);
+        const best = deckEntry || getSuggestionsForSymbol(sym)[0];
         nextTerms.push({
           symbol: sym,
           name: best?.name || '',
+          shortName: deckEntry?.shortName || '',
           definition: best?.definition || '',
+          shortDefinition: deckEntry?.shortDefinition || '',
           units: best?.units || '',
         });
       }
@@ -224,7 +237,18 @@ export const CardCreatorModal: React.FC<CardCreatorModalProps> = ({
     if (!sym) return;
     const k = normalizeSymbolKey(sym);
     if (!terms.some((t) => normalizeSymbolKey(t.symbol) === k)) {
-      setTerms([...terms, { symbol: sym, name: '', definition: '', units: '' }]);
+      const deckEntry = resolveCardTerm(sym, undefined, setGlossary);
+      setTerms([
+        ...terms,
+        {
+          symbol: sym,
+          name: deckEntry?.name || '',
+          shortName: deckEntry?.shortName || '',
+          definition: deckEntry?.definition || '',
+          shortDefinition: deckEntry?.shortDefinition || '',
+          units: deckEntry?.units || '',
+        },
+      ]);
       setManualSymbolInput('');
     }
   };
@@ -262,8 +286,10 @@ export const CardCreatorModal: React.FC<CardCreatorModalProps> = ({
       title: title.trim(),
       category: category.trim() || 'General',
       prompt: prompt.trim(),
+      shortPrompt: shortPrompt.trim() || undefined,
       latexAnswer: latexAnswer.trim(),
       hint: hint.trim(),
+      cheatSheetNote: cheatSheetNote.trim() || undefined,
       explanation: explanation.trim(),
       terms: terms.length > 0 ? terms : undefined,
     };
@@ -274,8 +300,10 @@ export const CardCreatorModal: React.FC<CardCreatorModalProps> = ({
     if (addAnother) {
       setTitle('');
       setPrompt('');
+      setShortPrompt('');
       setLatexAnswer('');
       setHint('');
+      setCheatSheetNote('');
       setExplanation('');
       setTerms([]);
       const titleInput = document.getElementById('card-title');
@@ -297,9 +325,11 @@ export const CardCreatorModal: React.FC<CardCreatorModalProps> = ({
           id: crypto.randomUUID(),
           title: parts[0].trim(),
           prompt: parts[0].trim(),
+          shortPrompt: parts[0].trim(),
           latexAnswer: parts[1].trim(),
           category: category.trim() || 'General',
           hint: parts[2]?.trim() || '',
+          cheatSheetNote: parts[4]?.trim() || parts[2]?.trim() || undefined,
           explanation: parts[3]?.trim() || '',
         });
       }
@@ -321,12 +351,15 @@ export const CardCreatorModal: React.FC<CardCreatorModalProps> = ({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="modal-content" style={{ maxWidth: '720px', width: '95vw', maxHeight: '92vh', overflowY: 'auto' }}>
+      <div className="modal-content" style={{ maxWidth: '760px', width: '95vw', maxHeight: '92vh', overflowY: 'auto' }}>
         <div className="modal-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div>
             <h2 id="card-creator-dialog-title" className="modal-title">
               {initialCard ? 'Edit Flashcard' : 'Add Flashcards'}
             </h2>
+            {deckName && (
+              <span className="settings-desc">Deck: {deckName}</span>
+            )}
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -356,7 +389,7 @@ export const CardCreatorModal: React.FC<CardCreatorModalProps> = ({
               onClick={onClose}
               aria-label="Close dialog"
             >
-              ×
+              x
             </button>
           </div>
         </div>
@@ -457,12 +490,11 @@ export const CardCreatorModal: React.FC<CardCreatorModalProps> = ({
 
               {validationError && (
                 <div style={{ color: 'var(--error)', fontSize: '13px', display: 'flex', gap: '6px' }}>
-                  <span>⚠️ Syntax notice:</span>
+                  <strong>Syntax notice:</strong>
                   <span>{validationError}</span>
                 </div>
               )}
 
-              {/* Live Preview */}
               <div className="preview-card" style={{ minHeight: '56px' }}>
                 {latexAnswer.trim() ? (
                   <MathDisplay latex={latexAnswer} display={true} />
@@ -472,11 +504,45 @@ export const CardCreatorModal: React.FC<CardCreatorModalProps> = ({
               </div>
             </div>
 
+            {/* Compact PDF Cheat Sheet Section */}
+            <div className="settings-section" style={{ border: '1px solid var(--border)', borderRadius: '12px', padding: '12px', background: 'var(--bg-card-secondary)' }}>
+              <span className="settings-section-title" style={{ marginBottom: '2px' }}>
+                Cheat Sheet Summary Fields (Optional Short PDF Text)
+              </span>
+              <span className="settings-desc" style={{ marginBottom: '6px' }}>
+                Shorter prompt cue and key note shown when generating compact cheat sheets instead of long explanations.
+              </span>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <div className="input-group">
+                  <label htmlFor="card-short-prompt">Short Cheat Sheet Prompt / Cue</label>
+                  <input
+                    id="card-short-prompt"
+                    data-testid="creator-short-prompt-input"
+                    type="text"
+                    value={shortPrompt}
+                    onChange={(e) => setShortPrompt(e.target.value)}
+                    placeholder="e.g. Ideal gas law (molar)"
+                  />
+                </div>
+                <div className="input-group">
+                  <label htmlFor="card-cheatsheet-note">Extra Cheat Sheet Note</label>
+                  <input
+                    id="card-cheatsheet-note"
+                    data-testid="creator-cheatsheet-note-input"
+                    type="text"
+                    value={cheatSheetNote}
+                    onChange={(e) => setCheatSheetNote(e.target.value)}
+                    placeholder="e.g. Valid at low density / high T"
+                  />
+                </div>
+              </div>
+            </div>
+
             {/* Terms Section */}
-            <div className="settings-section" style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: '12px' }}>
+            <div className="settings-section" style={{ border: '1px solid var(--border)', borderRadius: '12px', padding: '12px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                 <div>
-                  <span className="settings-section-title" style={{ fontSize: '15px' }}>Term Definitions</span>
+                  <span className="settings-section-title" style={{ fontSize: '14px' }}>Term Definitions</span>
                   <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
                     {terms.length > 0 ? `${definedCount} of ${terms.length} terms defined` : 'Define variables and parameters in this formula'}
                   </div>
@@ -486,7 +552,7 @@ export const CardCreatorModal: React.FC<CardCreatorModalProps> = ({
                   type="button"
                   data-testid="creator-detect-terms-btn"
                   className="btn-secondary"
-                  style={{ minHeight: '34px', height: '34px', fontSize: '13px', padding: '0 12px' }}
+                  style={{ minHeight: '34px', height: '34px', fontSize: '13px', padding: '0 12px', flex: 'none' }}
                   onClick={handleDetectTerms}
                   disabled={!latexAnswer.trim()}
                 >
@@ -494,17 +560,16 @@ export const CardCreatorModal: React.FC<CardCreatorModalProps> = ({
                 </button>
               </div>
 
-              {/* Stale Terms Notice */}
               {diff.stale.length > 0 && (
-                <div style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid var(--error)', padding: '8px 12px', borderRadius: 'var(--radius-sm)', marginBottom: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ backgroundColor: 'var(--error-bg)', border: '1px solid var(--error)', padding: '8px 12px', borderRadius: '8px', marginBottom: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontSize: '12px', color: 'var(--error)' }}>
-                    ⚠️ {diff.stale.length} term(s) no longer in formula: {diff.stale.map((s) => s.symbol).join(', ')}
+                    Notice: {diff.stale.length} term(s) absent from current formula: {diff.stale.map((s) => s.symbol).join(', ')}
                   </span>
                   <button
                     type="button"
                     data-testid="creator-remove-stale-btn"
                     className="btn-secondary"
-                    style={{ minHeight: '26px', height: '26px', fontSize: '11px', padding: '0 8px' }}
+                    style={{ minHeight: '28px', height: '28px', fontSize: '11px', padding: '0 8px', flex: 'none' }}
                     onClick={handleRemoveStaleTerms}
                   >
                     Remove Stale
@@ -512,7 +577,6 @@ export const CardCreatorModal: React.FC<CardCreatorModalProps> = ({
                 </div>
               )}
 
-              {/* Term Rows */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '35vh', overflowY: 'auto' }}>
                 {terms.map((term, idx) => {
                   const isDefined = !!term.definition?.trim();
@@ -524,9 +588,9 @@ export const CardCreatorModal: React.FC<CardCreatorModalProps> = ({
                       data-testid={`creator-term-row-${idx}`}
                       style={{
                         padding: '10px',
-                        borderRadius: 'var(--radius-sm)',
-                        backgroundColor: 'var(--bg-secondary)',
-                        border: isDefined ? '1px solid var(--border)' : '1px solid rgba(239, 68, 68, 0.4)',
+                        borderRadius: '8px',
+                        backgroundColor: 'var(--bg-card-secondary)',
+                        border: isDefined ? '1px solid var(--border)' : '1px solid var(--error)',
                       }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
@@ -535,7 +599,7 @@ export const CardCreatorModal: React.FC<CardCreatorModalProps> = ({
                             <MathDisplay latex={term.symbol} display={false} />
                           </span>
                           {!isDefined && (
-                            <span className="deck-tag" style={{ backgroundColor: 'rgba(239, 68, 68, 0.15)', color: 'var(--error)', fontSize: '11px' }}>
+                            <span className="deck-tag" style={{ backgroundColor: 'var(--error-bg)', color: 'var(--error)', fontSize: '11px' }}>
                               Undefined
                             </span>
                           )}
@@ -546,48 +610,49 @@ export const CardCreatorModal: React.FC<CardCreatorModalProps> = ({
                             type="button"
                             data-testid={`creator-term-up-${idx}`}
                             className="toolbar-btn"
+                            style={{ minHeight: '32px', height: '32px', minWidth: '38px', fontSize: '12px' }}
                             disabled={idx === 0}
                             onClick={() => handleMoveTerm(idx, 'up')}
                             title="Move up"
                           >
-                            ↑
+                            Up
                           </button>
                           <button
                             type="button"
                             data-testid={`creator-term-down-${idx}`}
                             className="toolbar-btn"
+                            style={{ minHeight: '32px', height: '32px', minWidth: '42px', fontSize: '12px' }}
                             disabled={idx === terms.length - 1}
                             onClick={() => handleMoveTerm(idx, 'down')}
                             title="Move down"
                           >
-                            ↓
+                            Down
                           </button>
                           {onApplyTermToSetGlossary && (
                             <button
                               type="button"
                               data-testid={`creator-term-apply-glossary-${idx}`}
                               className="toolbar-btn"
-                              style={{ fontSize: '11px', padding: '0 8px' }}
-                              title="Add definition to set glossary"
+                              style={{ fontSize: '11px', padding: '0 8px', minHeight: '32px', height: '32px' }}
+                              title={`Save definition to ${deckName || 'this deck'} glossary`}
                               onClick={() => onApplyTermToSetGlossary(term)}
                             >
-                              Apply to Deck
+                              Save to Deck Glossary
                             </button>
                           )}
                           <button
                             type="button"
                             data-testid={`creator-term-delete-${idx}`}
                             className="toolbar-btn"
-                            style={{ color: 'var(--error)' }}
+                            style={{ color: 'var(--error)', minHeight: '32px', height: '32px', minWidth: '32px' }}
                             onClick={() => handleRemoveTerm(idx)}
                             title="Remove term"
                           >
-                            ×
+                            x
                           </button>
                         </div>
                       </div>
 
-                      {/* Suggestions Chips */}
                       {suggestions.length > 0 && (
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginBottom: '6px' }}>
                           <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Suggestions:</span>
@@ -597,7 +662,7 @@ export const CardCreatorModal: React.FC<CardCreatorModalProps> = ({
                               type="button"
                               data-testid={`creator-term-${idx}-suggestion-${sIdx}`}
                               className="toolbar-btn"
-                              style={{ fontSize: '11px', padding: '2px 6px', height: 'auto' }}
+                              style={{ fontSize: '11px', padding: '2px 6px', height: 'auto', minHeight: '26px' }}
                               onClick={() =>
                                 handleUpdateTerm(idx, {
                                   ...term,
@@ -613,13 +678,21 @@ export const CardCreatorModal: React.FC<CardCreatorModalProps> = ({
                         </div>
                       )}
 
-                      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '8px', marginBottom: '6px' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '8px', marginBottom: '6px' }}>
                         <input
                           type="text"
                           data-testid={`creator-term-name-${idx}`}
                           value={term.name || ''}
                           onChange={(e) => handleUpdateTerm(idx, { ...term, name: e.target.value })}
-                          placeholder="Short name (e.g. Kinematic viscosity)"
+                          placeholder="Full name (e.g. Kinematic viscosity)"
+                          style={{ fontSize: '13px', padding: '6px 8px' }}
+                        />
+                        <input
+                          type="text"
+                          data-testid={`creator-term-shortname-${idx}`}
+                          value={term.shortName || ''}
+                          onChange={(e) => handleUpdateTerm(idx, { ...term, shortName: e.target.value })}
+                          placeholder="Short cheat label"
                           style={{ fontSize: '13px', padding: '6px 8px' }}
                         />
                         <input
@@ -632,20 +705,29 @@ export const CardCreatorModal: React.FC<CardCreatorModalProps> = ({
                         />
                       </div>
 
-                      <textarea
-                        data-testid={`creator-term-definition-${idx}`}
-                        value={term.definition || ''}
-                        onChange={(e) => handleUpdateTerm(idx, { ...term, definition: e.target.value })}
-                        placeholder="Detailed definition of this quantity..."
-                        rows={2}
-                        style={{ fontSize: '13px', padding: '6px 8px' }}
-                      />
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                        <textarea
+                          data-testid={`creator-term-definition-${idx}`}
+                          value={term.definition || ''}
+                          onChange={(e) => handleUpdateTerm(idx, { ...term, definition: e.target.value })}
+                          placeholder="Full definition of this quantity..."
+                          rows={2}
+                          style={{ fontSize: '13px', padding: '6px 8px' }}
+                        />
+                        <textarea
+                          data-testid={`creator-term-shortdef-${idx}`}
+                          value={term.shortDefinition || ''}
+                          onChange={(e) => handleUpdateTerm(idx, { ...term, shortDefinition: e.target.value })}
+                          placeholder="Short cheat sheet definition (optional)..."
+                          rows={2}
+                          style={{ fontSize: '13px', padding: '6px 8px' }}
+                        />
+                      </div>
                     </div>
                   );
                 })}
               </div>
 
-              {/* Add manual term input */}
               <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
                 <input
                   type="text"
@@ -659,7 +741,7 @@ export const CardCreatorModal: React.FC<CardCreatorModalProps> = ({
                   type="button"
                   data-testid="creator-add-manual-term-btn"
                   className="btn-secondary"
-                  style={{ minHeight: '34px', height: '34px', fontSize: '13px', padding: '0 12px' }}
+                  style={{ minHeight: '34px', height: '34px', fontSize: '13px', padding: '0 12px', flex: 'none' }}
                   onClick={handleAddManualTerm}
                   disabled={!manualSymbolInput.trim()}
                 >
@@ -729,7 +811,6 @@ export const CardCreatorModal: React.FC<CardCreatorModalProps> = ({
             </div>
           </div>
         ) : (
-          /* Bulk paste tab */
           <div className="modal-form" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <div className="input-group">
               <label htmlFor="bulk-delimiter">Separator between Term & Equation</label>
@@ -759,7 +840,7 @@ export const CardCreatorModal: React.FC<CardCreatorModalProps> = ({
                 style={{ fontFamily: 'var(--font-mono)', fontSize: '14px' }}
               />
               <span className="input-helper">
-                Format: Term &lt;delimiter&gt; Equation [&lt;delimiter&gt; Hint &lt;delimiter&gt; Explanation]
+                Format: Term &lt;delimiter&gt; Equation [&lt;delimiter&gt; Hint &lt;delimiter&gt; Explanation &lt;delimiter&gt; Cheat Sheet Note]
               </span>
             </div>
 

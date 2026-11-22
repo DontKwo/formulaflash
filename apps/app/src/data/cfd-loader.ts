@@ -10,8 +10,10 @@ export function loadCfdCompleteDeck(): FlashcardItem[] {
       category: card.category,
       title: card.title,
       prompt: card.prompt,
+      shortPrompt: card.shortPrompt,
       latexAnswer: card.latexAnswer,
       hint: card.hint,
+      cheatSheetNote: card.cheatSheetNote,
       explanation: card.explanation,
       terms: card.terms,
     }));

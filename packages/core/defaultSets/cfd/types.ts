@@ -5,8 +5,10 @@ export interface CfdFlashcardItem {
   category: string;
   title: string;
   prompt: string;
+  shortPrompt?: string;
   latexAnswer: string;
   hint?: string;
+  cheatSheetNote?: string;
   explanation: string;
   terms?: TermDefinition[];
 }

@@ -38,8 +38,8 @@ function normalizeSymbolKey(symbol) {
   s = s.replace(/\s*([_^{}()])\s*/g, '$1');
   s = s.replace(/_([a-zA-Z0-9])/g, '_{$1}');
   s = s.replace(/\^([a-zA-Z0-9])/g, '^{$1}');
-  s = s.replace(/_\{+([^{}]+)\}+/g, '_{$1}');
-  s = s.replace(/\^\{+([^{}]+)\}+/g, '^{$1}');
+  s = s.replace(/_\{\{([^{}]+)\}\}/g, '_{$1}');
+  s = s.replace(/\^\{\{([^{}]+)\}\}/g, '^{$1}');
   return s.replace(/\s+/g, ' ').trim();
 }
 
@@ -65,7 +65,7 @@ function detectFormulaTerms(latex) {
     if (NAMED_QUANTITIES.has(name)) add(name);
   }
 
-  const styledRegex = /\\(mathbf|boldsymbol|vec|hat|bar|dot|ddot|tilde|widecheck|widehat|widetilde|overline)\s*\{([^}]+)\}(?:_\{?[^{}\s]+\}?)*/g;
+  const styledRegex = /\\(mathbf|boldsymbol|vec|hat|bar|dot|ddot|tilde|widecheck|widehat|widetilde|overline)\s*\{([^}]+)\}(?:_\{[^{}]+\}|_[a-zA-Z0-9+\-*]+)*/g;
   while ((match = styledRegex.exec(input)) !== null) {
     add(match[0]);
   }
@@ -75,12 +75,12 @@ function detectFormulaTerms(latex) {
     add(`\\Delta ${match[1]}`);
   }
 
-  const greekRegex = /\\([a-zA-Z]+)(?:_\{?[a-zA-Z0-9+\-*]+\}?)*(?![a-zA-Z])/g;
+  const greekRegex = /\\([a-zA-Z]+)(?:_\{[^{}]+\}|_[a-zA-Z0-9+\-*]+)*(?![a-zA-Z])/g;
   while ((match = greekRegex.exec(input)) !== null) {
     if (GREEK_COMMANDS.has(match[1])) add(match[0]);
   }
 
-  const latinRegex = /(?<!\\|[a-zA-Z])([a-zA-Z])(?:_\{?[a-zA-Z0-9+\-*]+\}?)*(?![a-zA-Z])/g;
+  const latinRegex = /(?<!\\|[a-zA-Z])([a-zA-Z])(?:_\{[^{}]+\}|_[a-zA-Z0-9+\-*]+)*(?![a-zA-Z])/g;
   while ((match = latinRegex.exec(input)) !== null) {
     const base = match[1];
     if (match[0].trim().length > 0 && !EXCLUDED_COMMANDS.has(base)) {

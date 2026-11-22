@@ -1963,5 +1963,150 @@
     "preconditions": "visible",
     "inputs": [],
     "expectedEffect": "interaction"
+  },
+  {
+    "screen": "learn",
+    "testId": "deck-category-filter",
+    "role": "combobox",
+    "label": "Topic Category Filter",
+    "preconditions": "Main learn mode",
+    "inputs": [
+      "Turbulence"
+    ],
+    "expectedEffect": "Filters active deck by category"
+  },
+  {
+    "screen": "learn",
+    "testId": "learn-switch-write-btn",
+    "role": "button",
+    "label": "Switch Learn Stage",
+    "preconditions": "Learn mode card active",
+    "inputs": [],
+    "expectedEffect": "Toggles between Multiple Choice and Write Equation"
+  },
+  {
+    "screen": "learn",
+    "testId": "learn-advance-write-btn",
+    "role": "button",
+    "label": "Now Write This Formula",
+    "preconditions": "Correct MC verdict displayed",
+    "inputs": [],
+    "expectedEffect": "Advances current card from MC to Write stage"
+  },
+  {
+    "screen": "creator",
+    "testId": "creator-short-prompt-input",
+    "role": "textbox",
+    "label": "Short Cheat Sheet Prompt",
+    "preconditions": "Card creator modal open",
+    "inputs": [
+      "Short cue"
+    ],
+    "expectedEffect": "Updates shortPrompt field"
+  },
+  {
+    "screen": "creator",
+    "testId": "creator-cheatsheet-note-input",
+    "role": "textbox",
+    "label": "Extra Cheat Sheet Note",
+    "preconditions": "Card creator modal open",
+    "inputs": [
+      "Short note"
+    ],
+    "expectedEffect": "Updates cheatSheetNote field"
+  },
+  {
+    "screen": "export-studio",
+    "testId": "content-only-formulas-toggle",
+    "role": "checkbox",
+    "label": "Only Show Formulas",
+    "preconditions": "Export studio content tab open",
+    "inputs": [],
+    "expectedEffect": "Toggles formula-only export mode"
+  },
+  {
+    "screen": "export-studio",
+    "testId": "content-use-cheatsheet-toggle",
+    "role": "checkbox",
+    "label": "Use Shorter Cheat Sheet Versions",
+    "preconditions": "Export studio content tab open",
+    "inputs": [],
+    "expectedEffect": "Toggles concise cheat sheet text"
+  },
+  {
+    "screen": "export-studio",
+    "testId": "content-show-prompt-toggle",
+    "role": "checkbox",
+    "label": "Show Question / Prompt",
+    "preconditions": "Export studio content tab open",
+    "inputs": [],
+    "expectedEffect": "Toggles prompt text on PDF cards"
+  },
+  {
+    "screen": "export-studio",
+    "testId": "content-show-cheatnotes-toggle",
+    "role": "checkbox",
+    "label": "Show Cheat Sheet Notes",
+    "preconditions": "Export studio content tab open",
+    "inputs": [],
+    "expectedEffect": "Toggles cheat sheet notes on PDF cards"
+  },
+  {
+    "screen": "export-studio",
+    "testId": "content-show-terms-toggle",
+    "role": "checkbox",
+    "label": "Show Variable Terms",
+    "preconditions": "Export studio content tab open",
+    "inputs": [],
+    "expectedEffect": "Toggles variable terms section on PDF"
+  },
+  {
+    "screen": "export-studio",
+    "testId": "content-show-term-names-toggle",
+    "role": "checkbox",
+    "label": "Show Term Names",
+    "preconditions": "Export studio content tab open",
+    "inputs": [],
+    "expectedEffect": "Toggles symbol names in PDF terms"
+  },
+  {
+    "screen": "export-studio",
+    "testId": "content-show-term-defs-toggle",
+    "role": "checkbox",
+    "label": "Show Term Definitions",
+    "preconditions": "Export studio content tab open",
+    "inputs": [],
+    "expectedEffect": "Toggles symbol definitions in PDF terms"
+  },
+  {
+    "screen": "export-studio",
+    "testId": "content-show-units-toggle",
+    "role": "checkbox",
+    "label": "Show Term Units",
+    "preconditions": "Export studio content tab open",
+    "inputs": [],
+    "expectedEffect": "Toggles units in PDF terms"
+  },
+  {
+    "screen": "glossary",
+    "testId": "glossary-short-name-input",
+    "role": "textbox",
+    "label": "Short Cheat Sheet Label",
+    "preconditions": "Glossary modal symbol selected",
+    "inputs": [
+      "Kin visc"
+    ],
+    "expectedEffect": "Updates term shortName for this deck"
+  },
+  {
+    "screen": "glossary",
+    "testId": "glossary-short-definition-input",
+    "role": "textbox",
+    "label": "Short Cheat Sheet Definition",
+    "preconditions": "Glossary modal symbol selected",
+    "inputs": [
+      "mu / rho"
+    ],
+    "expectedEffect": "Updates term shortDefinition for this deck"
   }
 ]

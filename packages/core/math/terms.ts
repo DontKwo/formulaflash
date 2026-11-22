@@ -67,7 +67,7 @@ export function detectFormulaTerms(latex: string): string[] {
 
   // 2. Tokenize styled / decorated constructs:
   // e.g. \mathbf{u}, \vec{v}, \hat{\rho}, \bar{u}, \dot{m}, etc., optionally with subscripts
-  const styledRegex = /\\(mathbf|boldsymbol|vec|hat|bar|dot|ddot|tilde|widecheck|widehat|widetilde|overline)\s*\{([^}]+)\}(?:_\{?[^{}\s]+\}?)*/g;
+  const styledRegex = /\\(mathbf|boldsymbol|vec|hat|bar|dot|ddot|tilde|widecheck|widehat|widetilde|overline)\s*\{([^}]+)\}(?:_\{[^{}]+\}|_[a-zA-Z0-9+\-*]+)*/g;
   while ((match = styledRegex.exec(input)) !== null) {
     addTerm(match[0]);
   }
@@ -80,7 +80,7 @@ export function detectFormulaTerms(latex: string): string[] {
 
   // 4. Greek letters with optional subscripts:
   // e.g. \nu_t, \nu_{t}, \rho
-  const greekRegex = /\\([a-zA-Z]+)(?:_\{?[a-zA-Z0-9+\-*]+\}?)*(?![a-zA-Z])/g;
+  const greekRegex = /\\([a-zA-Z]+)(?:_\{[^{}]+\}|_[a-zA-Z0-9+\-*]+)*(?![a-zA-Z])/g;
   while ((match = greekRegex.exec(input)) !== null) {
     const cmd = match[1];
     if (GREEK_COMMANDS.has(cmd)) {
@@ -90,7 +90,7 @@ export function detectFormulaTerms(latex: string): string[] {
 
   // 5. Latin letter variables with optional subscripts:
   // e.g. p, u, x, T, c_p, y^+ (ignoring powers ^2)
-  const latinVarRegex = /(?<!\\|[a-zA-Z])([a-zA-Z])(?:_\{?[a-zA-Z0-9+\-*]+\}?)*(?![a-zA-Z])/g;
+  const latinVarRegex = /(?<!\\|[a-zA-Z])([a-zA-Z])(?:_\{[^{}]+\}|_[a-zA-Z0-9+\-*]+)*(?![a-zA-Z])/g;
   while ((match = latinVarRegex.exec(input)) !== null) {
     const full = match[0].trim();
     const base = match[1];
@@ -115,7 +115,7 @@ export interface TermDiffResult {
 
 /**
  * Compares detected symbols in a formula with an existing list of term definitions.
- * Flags symbols that are no longer in the formula (stale) and detected symbols lacking definitions.
+ * Flags symbols absent from the formula (stale) and detected symbols lacking definitions.
  */
 export function diffTerms(formula: string, existingTerms: TermDefinition[] = []): TermDiffResult {
   const currentDetected = detectFormulaTerms(formula);
@@ -126,7 +126,7 @@ export function diffTerms(formula: string, existingTerms: TermDefinition[] = [])
     existingMap.set(normalizeSymbolKey(t.symbol), t);
   }
 
-  // Stale terms: defined on card, but no longer present in formula
+  // Stale terms: defined on card, absent from formula
   const stale: TermDefinition[] = [];
   for (const t of existingTerms) {
     const k = normalizeSymbolKey(t.symbol);

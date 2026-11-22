@@ -1,5 +1,5 @@
 import { jsPDF } from 'jspdf';
-import type { DocumentModel } from '@formulaflash/core';
+import { formatLatexForPdfText, type DocumentModel } from '@formulaflash/core';
 import { renderFormulaGraphic } from './formula-renderer.ts';
 
 export interface PdfWriterProgressCallback {
@@ -11,15 +11,36 @@ export interface PdfWriterOptions {
   cancelSignal?: { cancelled: boolean };
 }
 
-/**
- * Converts hexadecimal color string '#rrggbb' to [r, g, b] numbers (0-255).
- */
 function hexToRgb(hex?: string): [number, number, number] | undefined {
   if (!hex || !hex.startsWith('#') || hex.length < 7) return undefined;
   const r = parseInt(hex.slice(1, 3), 16);
   const g = parseInt(hex.slice(3, 5), 16);
   const b = parseInt(hex.slice(5, 7), 16);
   return [r, g, b];
+}
+
+function drawWrappedFallbackFormula(
+  pdf: jsPDF,
+  latex: string,
+  x: number,
+  y: number,
+  maxWidth: number,
+  fontSize: number,
+  isError: boolean
+): void {
+  pdf.setFont('Courier', 'normal');
+  pdf.setFontSize(Math.max(6, fontSize * 0.9));
+  if (isError) {
+    pdf.setTextColor(185, 28, 28);
+  } else {
+    pdf.setTextColor(30, 41, 59);
+  }
+  const cleanText = formatLatexForPdfText(latex) || latex;
+  const lines = pdf.splitTextToSize(isError ? `[Formula: ${cleanText}]` : cleanText, Math.max(20, maxWidth));
+  const maxLines = Math.max(1, Math.min(lines.length, 4));
+  for (let i = 0; i < maxLines; i++) {
+    pdf.text(lines[i], x, y + fontSize * 0.9 + i * fontSize * 1.15);
+  }
 }
 
 /**
@@ -40,7 +61,6 @@ export async function writeDocumentToPdf(
     compress: true,
   });
 
-  // Set document metadata
   pdf.setDocumentProperties({
     title: docModel.title,
     author: docModel.author,
@@ -71,29 +91,28 @@ export async function writeDocumentToPdf(
     pdf.setTextColor(100, 116, 139);
 
     if (hf.headerLeft) {
-      pdf.text(hf.headerLeft, page.margins.left, page.margins.top - 12);
+      pdf.text(hf.headerLeft, page.margins.left, page.margins.top - 14);
     }
     if (hf.headerRight) {
-      pdf.text(hf.headerRight, page.width - page.margins.right, page.margins.top - 12, { align: 'right' });
+      pdf.text(hf.headerRight, page.width - page.margins.right, page.margins.top - 14, { align: 'right' });
     }
     if (hf.lineY) {
       pdf.setDrawColor(226, 232, 240);
       pdf.setLineWidth(0.5);
-      pdf.line(page.margins.left, page.margins.top - 8, page.width - page.margins.right, page.margins.top - 8);
+      pdf.line(page.margins.left, page.margins.top - 9, page.width - page.margins.right, page.margins.top - 9);
     }
 
     if (hf.footerLeft) {
-      pdf.text(hf.footerLeft, page.margins.left, page.height - page.margins.bottom + 12);
+      pdf.text(hf.footerLeft, page.margins.left, page.height - page.margins.bottom + 14);
     }
     if (hf.footerRight) {
-      pdf.text(hf.footerRight, page.width - page.margins.right, page.height - page.margins.bottom + 12, { align: 'right' });
+      pdf.text(hf.footerRight, page.width - page.margins.right, page.height - page.margins.bottom + 14, { align: 'right' });
     }
 
     // 2. Render Page Boxes
     for (const box of page.boxes) {
       const rect = box.rect;
 
-      // Draw container box
       if (box.backgroundColor) {
         const rgb = hexToRgb(box.backgroundColor);
         if (rgb) {
@@ -119,7 +138,7 @@ export async function writeDocumentToPdf(
         }
       }
 
-      // Draw Text Runs
+      // Draw Text Runs clipped inside box width
       for (const run of box.runs) {
         const fontStyle = run.style === 'bold' ? 'bold' : run.style === 'italic' ? 'italic' : 'normal';
         pdf.setFont(run.fontFamily || 'Helvetica', fontStyle);
@@ -128,48 +147,63 @@ export async function writeDocumentToPdf(
         const textRgb = hexToRgb(run.color) || [15, 23, 42];
         pdf.setTextColor(textRgb[0], textRgb[1], textRgb[2]);
 
-        pdf.text(run.text, rect.x + run.x, rect.y + run.y + run.fontSize * 0.85);
+        const safeMaxWidth = Math.max(10, rect.width - run.x * 2);
+        pdf.text(run.text, rect.x + run.x, rect.y + run.y + run.fontSize * 0.85, {
+          maxWidth: safeMaxWidth,
+        });
       }
 
-      // Draw Formula Blocks
+      // Draw Formula Blocks scaled proportionally within BOTH width and height bounds
       for (const formula of box.formulas) {
         try {
           const formulaGraphic = await renderFormulaGraphic(
             formula.latex,
             formula.fontSize,
-            box.borderColor || '#000000'
+            box.borderColor || '#0f172a'
           );
 
           if (formulaGraphic.pngDataUri) {
-            const fitW = Math.min(formula.width, formulaGraphic.width);
-            const fitH = (fitW / formulaGraphic.width) * formulaGraphic.height;
+            const scaleW = formula.width / Math.max(1, formulaGraphic.width);
+            const scaleH = formula.height / Math.max(1, formulaGraphic.height);
+            const fitScale = Math.min(1, scaleW, scaleH);
+            const fitW = formulaGraphic.width * fitScale;
+            const fitH = formulaGraphic.height * fitScale;
+            const offsetY = Math.max(0, (formula.height - fitH) / 2);
+
             pdf.addImage(
               formulaGraphic.pngDataUri,
               'PNG',
               rect.x + formula.x,
-              rect.y + formula.y,
+              rect.y + formula.y + offsetY,
               fitW,
               fitH
             );
           } else {
-            // Text fallback for Node or error
-            pdf.setFont('Courier', 'normal');
-            pdf.setFontSize(formula.fontSize);
-            pdf.setTextColor(30, 41, 59);
-            pdf.text(formula.latex, rect.x + formula.x, rect.y + formula.y + formula.fontSize);
+            drawWrappedFallbackFormula(
+              pdf,
+              formula.latex,
+              rect.x + formula.x,
+              rect.y + formula.y,
+              formula.width,
+              formula.fontSize,
+              false
+            );
           }
         } catch {
-          // Fallback gracefully without crash
-          pdf.setFont('Courier', 'normal');
-          pdf.setFontSize(formula.fontSize);
-          pdf.setTextColor(185, 28, 28);
-          pdf.text(`[Formula: ${formula.latex}]`, rect.x + formula.x, rect.y + formula.y + formula.fontSize);
+          drawWrappedFallbackFormula(
+            pdf,
+            formula.latex,
+            rect.x + formula.x,
+            rect.y + formula.y,
+            formula.width,
+            formula.fontSize,
+            true
+          );
         }
       }
     }
   }
 
-  // Bookmarks / Outline
   if (docModel.bookmarks && docModel.bookmarks.length > 0) {
     for (const bm of docModel.bookmarks) {
       try {

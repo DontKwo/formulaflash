@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import type { FlashcardSet } from '../data/storage.ts';
+import { getAvailableStarterDecks, type FlashcardSet } from '../data/storage.ts';
 
 export interface SetSelectorModalProps {
   sets: FlashcardSet[];
   activeSetId: string;
   onSelectSet: (setId: string) => void;
   onCreateSet: (name: string, category: string) => void;
+  onImportStarterDeck?: (deckId: string) => void;
   onClose: () => void;
 }
 
@@ -14,11 +15,15 @@ export const SetSelectorModal: React.FC<SetSelectorModalProps> = ({
   activeSetId,
   onSelectSet,
   onCreateSet,
+  onImportStarterDeck,
   onClose,
 }) => {
   const [isCreating, setIsCreating] = useState(false);
   const [newName, setNewName] = useState('');
   const [newCategory, setNewCategory] = useState('');
+
+  const starterDecks = getAvailableStarterDecks();
+  const existingIds = new Set(sets.map((s) => s.id));
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent): void => {
@@ -48,11 +53,18 @@ export const SetSelectorModal: React.FC<SetSelectorModalProps> = ({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="modal-content">
+      <div className="modal-content" style={{ maxWidth: '640px' }}>
         <div className="modal-header">
-          <h2 id="set-selector-dialog-title" className="modal-title">
-            {isCreating ? 'Create New Deck' : 'Select Deck'}
-          </h2>
+          <div>
+            <h2 id="set-selector-dialog-title" className="modal-title">
+              {isCreating ? 'Create New Deck' : 'Your Flashcard Decks'}
+            </h2>
+            <span className="settings-desc">
+              {isCreating
+                ? 'Starts with an isolated deck glossary.'
+                : 'Each deck maintains its own card collection and isolated glossary.'}
+            </span>
+          </div>
           <button
             type="button"
             data-testid="set-selector-close-btn"
@@ -60,42 +72,97 @@ export const SetSelectorModal: React.FC<SetSelectorModalProps> = ({
             onClick={onClose}
             aria-label="Close dialog"
           >
-            ×
+            x
           </button>
         </div>
 
         {!isCreating ? (
           <>
             <div className="set-list" role="listbox" aria-label="Deck List">
-              {sets.map((set, idx) => (
-                <div
-                  key={set.id}
-                  data-testid={`set-selector-item-${idx}`}
-                  className={`set-item ${set.id === activeSetId ? 'active' : ''}`}
-                  onClick={() => {
-                    onSelectSet(set.id);
-                    onClose();
-                  }}
-                  role="option"
-                  aria-selected={set.id === activeSetId}
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
+              {sets.map((set, idx) => {
+                const glossaryCount = Object.keys(set.glossary || {}).length;
+                return (
+                  <div
+                    key={set.id}
+                    data-testid={`set-selector-item-${idx}`}
+                    className={`set-item ${set.id === activeSetId ? 'active' : ''}`}
+                    onClick={() => {
                       onSelectSet(set.id);
                       onClose();
-                    }
-                  }}
-                >
-                  <div>
-                    <div className="set-name">{set.name}</div>
-                    <div className="deck-tag" style={{ display: 'inline-block', marginTop: '4px' }}>
-                      {set.category}
+                    }}
+                    role="option"
+                    aria-selected={set.id === activeSetId}
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        onSelectSet(set.id);
+                        onClose();
+                      }
+                    }}
+                  >
+                    <div>
+                      <div className="set-name">{set.name}</div>
+                      <div style={{ display: 'flex', gap: '6px', marginTop: '4px', flexWrap: 'wrap' }}>
+                        <span className="deck-tag">{set.category}</span>
+                        <span className="deck-tag" style={{ opacity: 0.85 }}>
+                          {glossaryCount} glossary symbols
+                        </span>
+                      </div>
                     </div>
+                    <div className="set-count">{set.cards.length} cards</div>
                   </div>
-                  <div className="set-count">{set.cards.length} cards</div>
-                </div>
-              ))}
+                );
+              })}
             </div>
+
+            {onImportStarterDeck && starterDecks.length > 0 && (
+              <div className="settings-section" style={{ marginTop: '4px' }}>
+                <span className="settings-section-title">Curated Starter Library</span>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '8px' }}>
+                  {starterDecks.map((deck, idx) => {
+                    const alreadyAdded = existingIds.has(deck.id);
+                    return (
+                      <div
+                        key={deck.id}
+                        style={{
+                          padding: '10px 12px',
+                          background: 'var(--bg-card-secondary)',
+                          border: '1px solid var(--border)',
+                          borderRadius: '10px',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          gap: '8px',
+                        }}
+                      >
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                            {deck.title}
+                          </div>
+                          <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                            {deck.cards.length} cards
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          data-testid={`starter-deck-import-${idx}`}
+                          className={alreadyAdded ? 'btn-secondary' : 'btn-primary'}
+                          style={{ flex: 'none', minHeight: '32px', height: '32px', fontSize: '12px', padding: '0 10px' }}
+                          onClick={() => {
+                            onImportStarterDeck(deck.id);
+                            onClose();
+                          }}
+                        >
+                          {alreadyAdded ? 'Open' : 'Add'}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             <div className="modal-actions" style={{ justifyContent: 'space-between' }}>
               <button
                 type="button"

@@ -7,13 +7,13 @@ export interface FlashcardSet {
   name: string;
   category: string;
   cards: FlashcardItem[];
-  glossary?: Record<string, TermDefinition>;
+  glossary: Record<string, TermDefinition>;
   isDefault?: boolean;
 }
 
 const STORAGE_KEY_SETS = 'formulaflash_sets';
 const STORAGE_KEY_SEED_VERSION = 'formulaflash_seed_version';
-const CURRENT_SEED_VERSION = 2;
+const CURRENT_SEED_VERSION = 3;
 
 export const CFD_DEFAULT_SET_ID = 'cfd-complete-reference';
 
@@ -23,7 +23,7 @@ export function createCfdDefaultSet(): FlashcardSet {
     name: 'CFD: Complete Reference',
     category: 'Fluid Dynamics',
     cards: loadCfdCompleteDeck(),
-    glossary: CFD_GLOSSARY,
+    glossary: structuredClone(CFD_GLOSSARY),
     isDefault: true,
   };
 }
@@ -32,7 +32,11 @@ function getStorageSets(): FlashcardSet[] {
   const data = localStorage.getItem(STORAGE_KEY_SETS);
   if (!data) return [];
   try {
-    return JSON.parse(data) as FlashcardSet[];
+    const parsed = JSON.parse(data) as FlashcardSet[];
+    return parsed.map((s) => ({
+      ...s,
+      glossary: s.glossary ? { ...s.glossary } : {},
+    }));
   } catch {
     return [];
   }
@@ -52,9 +56,18 @@ export function loadSets(): FlashcardSet[] {
     return sets;
   }
 
-  const existingCfd = sets.find((s) => s.id === CFD_DEFAULT_SET_ID);
-  if (!existingCfd) {
+  const cfdIdx = sets.findIndex((s) => s.id === CFD_DEFAULT_SET_ID);
+  if (cfdIdx === -1) {
     sets.unshift(createCfdDefaultSet());
+    localStorage.setItem(STORAGE_KEY_SETS, JSON.stringify(sets));
+  } else if (seedVersion < CURRENT_SEED_VERSION) {
+    // Refresh built-in CFD cards and glossary cleanly while preserving any user edits if desired
+    const refreshedCfd = createCfdDefaultSet();
+    sets[cfdIdx] = {
+      ...sets[cfdIdx],
+      cards: refreshedCfd.cards,
+      glossary: { ...refreshedCfd.glossary, ...(sets[cfdIdx].glossary || {}) },
+    };
     localStorage.setItem(STORAGE_KEY_SETS, JSON.stringify(sets));
   }
 
@@ -67,11 +80,15 @@ export function loadSets(): FlashcardSet[] {
 
 export function saveSet(set: FlashcardSet): void {
   const sets = loadSets();
-  const index = sets.findIndex((s) => s.id === set.id);
+  const normalizedSet: FlashcardSet = {
+    ...set,
+    glossary: set.glossary ? { ...set.glossary } : {},
+  };
+  const index = sets.findIndex((s) => s.id === normalizedSet.id);
   if (index >= 0) {
-    sets[index] = set;
+    sets[index] = normalizedSet;
   } else {
-    sets.push(set);
+    sets.push(normalizedSet);
   }
   localStorage.setItem(STORAGE_KEY_SETS, JSON.stringify(sets));
 }
@@ -109,7 +126,7 @@ export function saveSetGlossary(setId: string, glossary: Record<string, TermDefi
   const sets = loadSets();
   const setIndex = sets.findIndex((s) => s.id === setId);
   if (setIndex >= 0) {
-    sets[setIndex].glossary = glossary;
+    sets[setIndex].glossary = { ...glossary };
     localStorage.setItem(STORAGE_KEY_SETS, JSON.stringify(sets));
   }
 }
@@ -126,10 +143,14 @@ export function importStarterDeck(deckId: string): FlashcardSet | null {
       category: c.category,
       title: c.title,
       prompt: c.prompt,
+      shortPrompt: c.shortPrompt,
       latexAnswer: c.latexAnswer,
       hint: c.hint ?? '',
+      cheatSheetNote: c.cheatSheetNote,
       explanation: c.explanation,
+      terms: c.terms,
     })),
+    glossary: {},
     isDefault: true,
   };
   saveSet(set);

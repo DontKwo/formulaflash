@@ -23,14 +23,25 @@ type StudioTab = 'cards' | 'layout' | 'content' | 'style' | 'presets';
 const STORAGE_KEY_PRESETS = 'formulaflash_export_presets';
 const STORAGE_KEY_LAST_USED = 'formulaflash_export_last_used';
 
+function triStateToBool(val: string): boolean | undefined {
+  if (val === 'show') return true;
+  if (val === 'hide') return false;
+  return undefined;
+}
+
+function boolToTriState(val: boolean | undefined): string {
+  if (val === true) return 'show';
+  if (val === false) return 'hide';
+  return 'inherit';
+}
+
 export const ExportStudioModal: React.FC<ExportStudioModalProps> = ({
   activeSet,
   onClose,
   onEditCard,
 }) => {
-  const [activeTab, setActiveTab] = useState<StudioTab>('cards');
+  const [activeTab, setActiveTab] = useState<StudioTab>('content');
 
-  // Load custom presets
   const [customPresets, setCustomPresets] = useState<ExportPreset[]>(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY_PRESETS);
@@ -46,7 +57,6 @@ export const ExportStudioModal: React.FC<ExportStudioModalProps> = ({
     return [];
   });
 
-  // Options state
   const [options, setOptions] = useState<ExportOptions>(() => {
     try {
       const stored = localStorage.getItem(`${STORAGE_KEY_LAST_USED}_${activeSet.id}`);
@@ -60,30 +70,23 @@ export const ExportStudioModal: React.FC<ExportStudioModalProps> = ({
     return { ...DEFAULT_EXPORT_OPTIONS };
   });
 
-  // Export progress & execution state
   const [isExporting, setIsExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState<ExportProgress | null>(null);
   const [exportSuccess, setExportSuccess] = useState<{ bytes: Uint8Array; filename: string } | null>(null);
   const [exportError, setExportError] = useState<string | null>(null);
   const cancelRef = useRef<(() => void) | null>(null);
 
-  // Selected cards & search filter
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [editingOverrideCardId, setEditingOverrideCardId] = useState<string | null>(null);
-
-  // New preset form state
   const [newPresetName, setNewPresetName] = useState('');
 
-  // Persist options on change
   useEffect(() => {
     localStorage.setItem(`${STORAGE_KEY_LAST_USED}_${activeSet.id}`, JSON.stringify(options));
   }, [options, activeSet.id]);
 
-  // All cards
   const allCards = activeSet.cards || [];
 
-  // Filtered card list
   const filteredCards = useMemo(() => {
     return allCards.filter((card) => {
       const matchesSearch =
@@ -97,7 +100,6 @@ export const ExportStudioModal: React.FC<ExportStudioModalProps> = ({
     });
   }, [allCards, searchQuery, categoryFilter]);
 
-  // Unique categories
   const categories = useMemo(() => {
     const set = new Set<string>();
     for (const c of allCards) {
@@ -106,20 +108,25 @@ export const ExportStudioModal: React.FC<ExportStudioModalProps> = ({
     return Array.from(set);
   }, [allCards]);
 
-  // Selection state
-  const selectedCount = options.selectedCardIds.length === 0 ? allCards.length : options.selectedCardIds.length;
+  const selectedCount = options.selectedCardIds.includes('__none__')
+    ? 0
+    : options.selectedCardIds.length === 0
+    ? allCards.length
+    : options.selectedCardIds.length;
 
   const handleToggleCardSelection = (cardId: string): void => {
     setOptions((prev) => {
-      const currentlySelected = prev.selectedCardIds.length === 0
+      const baseList = prev.selectedCardIds.includes('__none__')
+        ? []
+        : prev.selectedCardIds.length === 0
         ? allCards.map((c) => c.id)
         : [...prev.selectedCardIds];
 
-      const next = currentlySelected.includes(cardId)
-        ? currentlySelected.filter((id) => id !== cardId)
-        : [...currentlySelected, cardId];
+      const next = baseList.includes(cardId)
+        ? baseList.filter((id) => id !== cardId)
+        : [...baseList, cardId];
 
-      return { ...prev, selectedCardIds: next };
+      return { ...prev, selectedCardIds: next.length === 0 ? ['__none__'] : next };
     });
   };
 
@@ -133,13 +140,32 @@ export const ExportStudioModal: React.FC<ExportStudioModalProps> = ({
 
   const handleInvertSelection = (): void => {
     setOptions((prev) => {
-      const current = new Set(prev.selectedCardIds.length === 0 ? allCards.map((c) => c.id) : prev.selectedCardIds);
+      const current = new Set(
+        prev.selectedCardIds.includes('__none__')
+          ? []
+          : prev.selectedCardIds.length === 0
+          ? allCards.map((c) => c.id)
+          : prev.selectedCardIds
+      );
       const inverted = allCards.filter((c) => !current.has(c.id)).map((c) => c.id);
       return { ...prev, selectedCardIds: inverted.length === 0 ? ['__none__'] : inverted };
     });
   };
 
-  // Debounced document layout model
+  const updateCardOverride = (cardId: string, patch: Record<string, unknown>): void => {
+    setOptions((prev) => ({
+      ...prev,
+      cardOverrides: {
+        ...prev.cardOverrides,
+        [cardId]: {
+          ...prev.cardOverrides[cardId],
+          cardId,
+          ...patch,
+        },
+      },
+    }));
+  };
+
   const [debouncedDocModel, setDebouncedDocModel] = useState<DocumentModel>(() =>
     layoutWithAutoFit(activeSet, options)
   );
@@ -148,11 +174,10 @@ export const ExportStudioModal: React.FC<ExportStudioModalProps> = ({
     const timer = setTimeout(() => {
       const model = layoutWithAutoFit(activeSet, options);
       setDebouncedDocModel(model);
-    }, 200);
+    }, 150);
     return () => clearTimeout(timer);
   }, [activeSet, options]);
 
-  // Export Trigger
   const handleStartExport = (): void => {
     setIsExporting(true);
     setExportProgress({ current: 0, total: debouncedDocModel.pages.length, phase: 'Initializing export' });
@@ -182,7 +207,6 @@ export const ExportStudioModal: React.FC<ExportStudioModalProps> = ({
     setIsExporting(false);
   };
 
-  // Preset operations
   const handleSavePreset = (): void => {
     if (!newPresetName.trim()) return;
     const newPreset: ExportPreset = {
@@ -209,7 +233,6 @@ export const ExportStudioModal: React.FC<ExportStudioModalProps> = ({
     localStorage.setItem(STORAGE_KEY_PRESETS, JSON.stringify(updated));
   };
 
-  // Keyboard navigation & Esc listener
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent): void => {
       if (e.key === 'Escape' && !isExporting) {
@@ -229,7 +252,6 @@ export const ExportStudioModal: React.FC<ExportStudioModalProps> = ({
       data-testid="export-studio-modal"
     >
       <div className="export-studio-container">
-        {/* Header */}
         <header className="export-studio-header">
           <div className="export-studio-title-group">
             <h2 id="export-studio-title" className="modal-title">Export PDF Cheat Sheet</h2>
@@ -242,17 +264,16 @@ export const ExportStudioModal: React.FC<ExportStudioModalProps> = ({
             onClick={onClose}
             aria-label="Close Export Studio"
           >
-            ×
+            x
           </button>
         </header>
 
-        {/* Main Body */}
         <div className="export-studio-main">
           {/* Left: Virtualized Preview Pane */}
           <section className="export-studio-preview-pane" aria-label="PDF Live Paged Preview">
             <div className="preview-toolbar">
               <span data-testid="export-studio-counter">
-                {selectedCount} of {allCards.length} cards • {debouncedDocModel.pages.length} page
+                {selectedCount} of {allCards.length} cards - {debouncedDocModel.pages.length} page
                 {debouncedDocModel.pages.length === 1 ? '' : 's'}
               </span>
               {debouncedDocModel.warnings.length > 0 && (
@@ -261,7 +282,7 @@ export const ExportStudioModal: React.FC<ExportStudioModalProps> = ({
                   data-testid="export-studio-warning-badge"
                   title={debouncedDocModel.warnings.join(' | ')}
                 >
-                  ⚠️ Warning
+                  Notice: {debouncedDocModel.warnings[0]}
                 </span>
               )}
             </div>
@@ -271,129 +292,159 @@ export const ExportStudioModal: React.FC<ExportStudioModalProps> = ({
                 <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-secondary)' }}>
                   <p>This deck has no cards yet to export.</p>
                 </div>
-              ) : debouncedDocModel.pages.slice(0, 10).map((page) => {
-                // Responsive preview display scale
-                const previewScale = 0.65;
-                const pWidth = page.width * previewScale;
-                const pHeight = page.height * previewScale;
+              ) : (
+                debouncedDocModel.pages.slice(0, 10).map((page) => {
+                  const previewScale = 0.68;
+                  const pWidth = page.width * previewScale;
+                  const pHeight = page.height * previewScale;
 
-                return (
-                  <div
-                    key={`preview-page-${page.pageNumber}`}
-                    className="pdf-preview-page"
-                    data-testid={`export-preview-page-${page.pageNumber}`}
-                    style={{
-                      width: `${pWidth}px`,
-                      height: `${pHeight}px`,
-                      minHeight: `${pHeight}px`,
-                    }}
-                  >
-                    {/* Header line */}
-                    {page.headerFooter.headerLeft && (
-                      <div
-                        style={{
-                          position: 'absolute',
-                          top: `${(page.margins.top - 18) * previewScale}px`,
-                          left: `${page.margins.left * previewScale}px`,
-                          fontSize: `${8 * previewScale}pt`,
-                          color: '#64748b',
-                        }}
-                      >
-                        {page.headerFooter.headerLeft}
-                      </div>
-                    )}
+                  return (
+                    <div
+                      key={`preview-page-${page.pageNumber}`}
+                      className="pdf-preview-page"
+                      data-testid={`export-preview-page-${page.pageNumber}`}
+                      style={{
+                        width: `${pWidth}px`,
+                        height: `${pHeight}px`,
+                        minHeight: `${pHeight}px`,
+                      }}
+                    >
+                      {page.headerFooter.headerLeft && (
+                        <div
+                          style={{
+                            position: 'absolute',
+                            top: `${Math.max(4, page.margins.top - 16) * previewScale}px`,
+                            left: `${page.margins.left * previewScale}px`,
+                            fontSize: `${7.5 * previewScale}pt`,
+                            color: '#64748b',
+                          }}
+                        >
+                          {page.headerFooter.headerLeft}
+                        </div>
+                      )}
 
-                    {page.headerFooter.headerRight && (
-                      <div
-                        style={{
-                          position: 'absolute',
-                          top: `${(page.margins.top - 18) * previewScale}px`,
-                          right: `${page.margins.right * previewScale}px`,
-                          fontSize: `${8 * previewScale}pt`,
-                          color: '#64748b',
-                        }}
-                      >
-                        {page.headerFooter.headerRight}
-                      </div>
-                    )}
+                      {page.headerFooter.headerRight && (
+                        <div
+                          style={{
+                            position: 'absolute',
+                            top: `${Math.max(4, page.margins.top - 16) * previewScale}px`,
+                            right: `${page.margins.right * previewScale}px`,
+                            fontSize: `${7.5 * previewScale}pt`,
+                            color: '#64748b',
+                          }}
+                        >
+                          {page.headerFooter.headerRight}
+                        </div>
+                      )}
 
-                    {/* Boxes */}
-                    {page.boxes.map((box) => (
-                      <div
-                        key={box.id}
-                        data-testid={`preview-box-${box.id}`}
-                        style={{
-                          position: 'absolute',
-                          left: `${box.rect.x * previewScale}px`,
-                          top: `${box.rect.y * previewScale}px`,
-                          width: `${box.rect.width * previewScale}px`,
-                          height: `${box.rect.height * previewScale}px`,
-                          backgroundColor: box.backgroundColor || 'transparent',
-                          border: box.borderWidth
-                            ? `${box.borderWidth * previewScale}px solid ${box.borderColor || '#cbd5e1'}`
-                            : 'none',
-                          borderRadius: `${(box.borderRadius || 0) * previewScale}px`,
-                          overflow: 'hidden',
-                          padding: `${4 * previewScale}px`,
-                        }}
-                      >
-                        {box.runs.map((run, rIdx) => (
+                      {page.boxes.map((box) => {
+                        const orderedElements = [
+                          ...box.runs.map((r, i) => ({ kind: 'run' as const, y: r.y, key: `r-${i}`, data: r })),
+                          ...box.formulas.map((f, i) => ({ kind: 'formula' as const, y: f.y, key: `f-${i}`, data: f })),
+                        ].sort((a, b) => a.y - b.y);
+
+                        return (
                           <div
-                            key={`run-${rIdx}`}
+                            key={box.id}
+                            data-testid={`preview-box-${box.id}`}
                             style={{
-                              fontSize: `${run.fontSize * previewScale}pt`,
-                              fontWeight: run.style === 'bold' ? 700 : 400,
-                              fontStyle: run.style === 'italic' ? 'italic' : 'normal',
-                              color: run.color,
-                              lineHeight: 1.2,
-                              whiteSpace: 'nowrap',
+                              position: 'absolute',
+                              left: `${box.rect.x * previewScale}px`,
+                              top: `${box.rect.y * previewScale}px`,
+                              width: `${box.rect.width * previewScale}px`,
+                              minHeight: `${box.rect.height * previewScale}px`,
+                              backgroundColor: box.backgroundColor || 'transparent',
+                              border: box.borderWidth
+                                ? `${Math.max(0.5, box.borderWidth * previewScale)}px solid ${box.borderColor || '#cbd5e1'}`
+                                : 'none',
+                              borderRadius: `${(box.borderRadius || 0) * previewScale}px`,
+                              padding: `${5 * previewScale}px`,
+                              boxSizing: 'border-box',
                               overflow: 'hidden',
-                              textOverflow: 'ellipsis',
                             }}
                           >
-                            {run.text}
+                            {orderedElements.map((item) =>
+                              item.kind === 'run' ? (
+                                <div
+                                  key={item.key}
+                                  style={{
+                                    fontSize: `${item.data.fontSize * previewScale}pt`,
+                                    fontWeight: item.data.style === 'bold' ? 700 : 400,
+                                    fontStyle: item.data.style === 'italic' ? 'italic' : 'normal',
+                                    color: item.data.color,
+                                    lineHeight: 1.2,
+                                    whiteSpace: 'normal',
+                                    wordBreak: 'break-word',
+                                  }}
+                                >
+                                  {item.data.text}
+                                </div>
+                              ) : (
+                                <div
+                                  key={item.key}
+                                  style={{
+                                    margin: `${2 * previewScale}px 0`,
+                                    fontSize: `${item.data.fontSize * previewScale}pt`,
+                                    color: '#0f172a',
+                                    maxWidth: '100%',
+                                    overflowX: 'hidden',
+                                  }}
+                                >
+                                  <MathDisplay latex={item.data.latex} display={false} />
+                                </div>
+                              )
+                            )}
                           </div>
-                        ))}
+                        );
+                      })}
 
-                        {box.formulas.map((form, fIdx) => (
-                          <div
-                            key={`form-${fIdx}`}
-                            style={{
-                              margin: `${2 * previewScale}px 0`,
-                              fontSize: `${form.fontSize * previewScale}pt`,
-                              color: '#0f172a',
-                            }}
-                          >
-                            <MathDisplay latex={form.latex} display={false} />
-                          </div>
-                        ))}
-                      </div>
-                    ))}
+                      {page.headerFooter.footerLeft && (
+                        <div
+                          style={{
+                            position: 'absolute',
+                            bottom: `${Math.max(4, page.margins.bottom - 16) * previewScale}px`,
+                            left: `${page.margins.left * previewScale}px`,
+                            fontSize: `${7.5 * previewScale}pt`,
+                            color: '#64748b',
+                          }}
+                        >
+                          {page.headerFooter.footerLeft}
+                        </div>
+                      )}
 
-                    {/* Footer line */}
-                    {page.headerFooter.footerRight && (
-                      <div
-                        style={{
-                          position: 'absolute',
-                          bottom: `${(page.margins.bottom - 18) * previewScale}px`,
-                          right: `${page.margins.right * previewScale}px`,
-                          fontSize: `${8 * previewScale}pt`,
-                          color: '#64748b',
-                        }}
-                      >
-                        {page.headerFooter.footerRight}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+                      {page.headerFooter.footerRight && (
+                        <div
+                          style={{
+                            position: 'absolute',
+                            bottom: `${Math.max(4, page.margins.bottom - 16) * previewScale}px`,
+                            right: `${page.margins.right * previewScale}px`,
+                            fontSize: `${7.5 * previewScale}pt`,
+                            color: '#64748b',
+                          }}
+                        >
+                          {page.headerFooter.footerRight}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              )}
             </div>
           </section>
 
           {/* Right: Controls Pane */}
           <section className="export-studio-controls-pane" aria-label="Customization Controls">
-            {/* Tabs */}
             <div className="studio-tabs" role="tablist" aria-label="Studio Options Tabs">
+              <button
+                type="button"
+                role="tab"
+                data-testid="studio-tab-content"
+                aria-selected={activeTab === 'content'}
+                className={`studio-tab-btn ${activeTab === 'content' ? 'active' : ''}`}
+                onClick={() => setActiveTab('content')}
+              >
+                Content
+              </button>
               <button
                 type="button"
                 role="tab"
@@ -417,16 +468,6 @@ export const ExportStudioModal: React.FC<ExportStudioModalProps> = ({
               <button
                 type="button"
                 role="tab"
-                data-testid="studio-tab-content"
-                aria-selected={activeTab === 'content'}
-                className={`studio-tab-btn ${activeTab === 'content' ? 'active' : ''}`}
-                onClick={() => setActiveTab('content')}
-              >
-                Content
-              </button>
-              <button
-                type="button"
-                role="tab"
                 data-testid="studio-tab-style"
                 aria-selected={activeTab === 'style'}
                 className={`studio-tab-btn ${activeTab === 'style' ? 'active' : ''}`}
@@ -446,12 +487,236 @@ export const ExportStudioModal: React.FC<ExportStudioModalProps> = ({
               </button>
             </div>
 
-            {/* Tab Contents */}
             <div className="studio-tab-content">
-              {/* Tab 1: Cards */}
+              {/* Tab 1: Content */}
+              {activeTab === 'content' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div className="input-group">
+                    <label htmlFor="content-layout-mode">Card Layout Mode</label>
+                    <select
+                      id="content-layout-mode"
+                      data-testid="content-layout-mode-select"
+                      value={options.cardLayoutMode}
+                      onChange={(e) =>
+                        setOptions((prev) => ({
+                          ...prev,
+                          cardLayoutMode: e.target.value as ExportOptions['cardLayoutMode'],
+                        }))
+                      }
+                    >
+                      <option value="prompt-and-formula">Prompt + Formula (Study Reference)</option>
+                      <option value="answer-key">Answer Key (Compact Title + Formula + Key Note)</option>
+                      <option value="formula-only">Formula-Only (Minimal Reference)</option>
+                    </select>
+                  </div>
+
+                  <div className="settings-group">
+                    <div className="settings-row">
+                      <div className="settings-label-group">
+                        <span id="label-only-formulas" className="settings-label">Only Show Formulas</span>
+                        <span className="settings-desc">Hide titles, prompts, and notes globally; optionally keep terms below.</span>
+                      </div>
+                      <label className="switch">
+                        <input
+                          type="checkbox"
+                          data-testid="content-only-formulas-toggle"
+                          aria-labelledby="label-only-formulas"
+                          checked={options.onlyShowFormulas}
+                          onChange={(e) => setOptions((prev) => ({ ...prev, onlyShowFormulas: e.target.checked }))}
+                        />
+                        <span className="switch-slider" />
+                      </label>
+                    </div>
+
+                    <div className="settings-row">
+                      <div className="settings-label-group">
+                        <span id="label-use-cheatsheet" className="settings-label">Use Shorter "Cheat Sheet" Versions</span>
+                        <span className="settings-desc">Prefer concise cheat-sheet cues, notes, and short variable labels/definitions.</span>
+                      </div>
+                      <label className="switch">
+                        <input
+                          type="checkbox"
+                          data-testid="content-use-cheatsheet-toggle"
+                          aria-labelledby="label-use-cheatsheet"
+                          checked={options.useCheatSheetVersion}
+                          onChange={(e) => setOptions((prev) => ({ ...prev, useCheatSheetVersion: e.target.checked }))}
+                        />
+                        <span className="switch-slider" />
+                      </label>
+                    </div>
+
+                    <div className="settings-row">
+                      <span id="label-show-title" className="settings-label">Show Card Title</span>
+                      <label className="switch">
+                        <input
+                          type="checkbox"
+                          data-testid="content-show-title-toggle"
+                          aria-labelledby="label-show-title"
+                          checked={options.showCardTitle}
+                          onChange={(e) => setOptions((prev) => ({ ...prev, showCardTitle: e.target.checked }))}
+                        />
+                        <span className="switch-slider" />
+                      </label>
+                    </div>
+
+                    <div className="settings-row">
+                      <span id="label-show-prompt" className="settings-label">Show Question / Prompt</span>
+                      <label className="switch">
+                        <input
+                          type="checkbox"
+                          data-testid="content-show-prompt-toggle"
+                          aria-labelledby="label-show-prompt"
+                          checked={options.showPrompt}
+                          onChange={(e) => setOptions((prev) => ({ ...prev, showPrompt: e.target.checked }))}
+                        />
+                        <span className="switch-slider" />
+                      </label>
+                    </div>
+
+                    <div className="settings-row">
+                      <span id="label-show-number" className="settings-label">Show Card Numbers (#1, #2...)</span>
+                      <label className="switch">
+                        <input
+                          type="checkbox"
+                          data-testid="content-show-number-toggle"
+                          aria-labelledby="label-show-number"
+                          checked={options.showCardNumber}
+                          onChange={(e) => setOptions((prev) => ({ ...prev, showCardNumber: e.target.checked }))}
+                        />
+                        <span className="switch-slider" />
+                      </label>
+                    </div>
+
+                    <div className="settings-row">
+                      <span id="label-show-cheatnotes" className="settings-label">Show Cheat Sheet Notes / Explanations</span>
+                      <label className="switch">
+                        <input
+                          type="checkbox"
+                          data-testid="content-show-cheatnotes-toggle"
+                          aria-labelledby="label-show-cheatnotes"
+                          checked={options.showCheatSheetNotes}
+                          onChange={(e) => setOptions((prev) => ({ ...prev, showCheatSheetNotes: e.target.checked }))}
+                        />
+                        <span className="switch-slider" />
+                      </label>
+                    </div>
+
+                    <div className="settings-row">
+                      <span id="label-show-hints" className="settings-label">Show Progressive Hints</span>
+                      <label className="switch">
+                        <input
+                          type="checkbox"
+                          data-testid="content-show-hints-toggle"
+                          aria-labelledby="label-show-hints"
+                          checked={options.showHint}
+                          onChange={(e) => setOptions((prev) => ({ ...prev, showHint: e.target.checked }))}
+                        />
+                        <span className="switch-slider" />
+                      </label>
+                    </div>
+
+                    <div className="settings-row">
+                      <span id="label-inc-appendix" className="settings-label">Include Glossary Appendix</span>
+                      <label className="switch">
+                        <input
+                          type="checkbox"
+                          data-testid="content-include-appendix-toggle"
+                          aria-labelledby="label-inc-appendix"
+                          checked={options.includeGlossaryAppendix}
+                          onChange={(e) => setOptions((prev) => ({ ...prev, includeGlossaryAppendix: e.target.checked }))}
+                        />
+                        <span className="switch-slider" />
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Variable / Terms Granular Controls */}
+                  <div className="settings-section">
+                    <span className="settings-section-title">Terms & Variables Options</span>
+                    <div className="settings-group">
+                      <div className="settings-row">
+                        <span id="label-show-terms" className="settings-label">Show Variable Terms</span>
+                        <label className="switch">
+                          <input
+                            type="checkbox"
+                            data-testid="content-show-terms-toggle"
+                            aria-labelledby="label-show-terms"
+                            checked={options.showTerms}
+                            onChange={(e) => setOptions((prev) => ({ ...prev, showTerms: e.target.checked }))}
+                          />
+                          <span className="switch-slider" />
+                        </label>
+                      </div>
+
+                      <div className="settings-row" style={{ gap: '12px', flexWrap: 'wrap' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', cursor: 'pointer' }}>
+                          <input
+                            type="checkbox"
+                            data-testid="content-show-term-names-toggle"
+                            checked={options.showTermNames}
+                            onChange={(e) => setOptions((prev) => ({ ...prev, showTermNames: e.target.checked }))}
+                          />
+                          Term Names
+                        </label>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', cursor: 'pointer' }}>
+                          <input
+                            type="checkbox"
+                            data-testid="content-show-term-defs-toggle"
+                            checked={options.showTermDefinitions}
+                            onChange={(e) => setOptions((prev) => ({ ...prev, showTermDefinitions: e.target.checked }))}
+                          />
+                          Term Definitions
+                        </label>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', cursor: 'pointer' }}>
+                          <input
+                            type="checkbox"
+                            data-testid="content-show-units-toggle"
+                            checked={options.showUnits}
+                            onChange={(e) => setOptions((prev) => ({ ...prev, showUnits: e.target.checked }))}
+                          />
+                          Units
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="input-group">
+                    <label htmlFor="content-terms-mode">Term Definitions Layout</label>
+                    <select
+                      id="content-terms-mode"
+                      data-testid="content-terms-mode-select"
+                      value={options.termsMode}
+                      onChange={(e) =>
+                        setOptions((prev) => ({
+                          ...prev,
+                          termsMode: e.target.value as ExportOptions['termsMode'],
+                        }))
+                      }
+                    >
+                      <option value="compact-inline">Compact Inline List</option>
+                      <option value="table">Small Table / Rows</option>
+                      <option value="footnote">Footnote-Style</option>
+                      <option value="none">Hide Terms</option>
+                    </select>
+                  </div>
+
+                  <div className="input-group">
+                    <label htmlFor="content-header-text">Custom Header Text</label>
+                    <input
+                      id="content-header-text"
+                      type="text"
+                      data-testid="content-header-text-input"
+                      value={options.headerText}
+                      onChange={(e) => setOptions((prev) => ({ ...prev, headerText: e.target.value }))}
+                      placeholder="{setName}"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Tab 2: Cards & Per-Card Overrides */}
               {activeTab === 'cards' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                  {/* Selection and Filter Header */}
                   <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                     <input
                       type="search"
@@ -506,7 +771,6 @@ export const ExportStudioModal: React.FC<ExportStudioModalProps> = ({
                     </button>
                   </div>
 
-                  {/* Sort preset */}
                   <div className="input-group">
                     <label htmlFor="cards-sort-order">Sort Order</label>
                     <select
@@ -528,10 +792,9 @@ export const ExportStudioModal: React.FC<ExportStudioModalProps> = ({
                     </select>
                   </div>
 
-                  {/* Card List with Overrides */}
                   <div
                     style={{
-                      maxHeight: '360px',
+                      maxHeight: '380px',
                       overflowY: 'auto',
                       border: '1px solid var(--border)',
                       borderRadius: '8px',
@@ -540,10 +803,10 @@ export const ExportStudioModal: React.FC<ExportStudioModalProps> = ({
                     role="list"
                     aria-label="Cards List"
                   >
-                    {filteredCards.slice(0, 50).map((card, idx) => {
+                    {filteredCards.slice(0, 60).map((card, idx) => {
                       const isSelected =
-                        options.selectedCardIds.length === 0 ||
-                        options.selectedCardIds.includes(card.id);
+                        !options.selectedCardIds.includes('__none__') &&
+                        (options.selectedCardIds.length === 0 || options.selectedCardIds.includes(card.id));
 
                       const override = options.cardOverrides[card.id];
                       const isEditing = editingOverrideCardId === card.id;
@@ -575,10 +838,8 @@ export const ExportStudioModal: React.FC<ExportStudioModalProps> = ({
                               type="button"
                               data-testid={`card-override-btn-${idx}`}
                               className="btn-secondary"
-                              style={{ minHeight: '32px', height: '32px', padding: '0 8px', fontSize: '12px' }}
-                              onClick={() =>
-                                setEditingOverrideCardId(isEditing ? null : card.id)
-                              }
+                              style={{ minHeight: '32px', height: '32px', padding: '0 8px', fontSize: '12px', flex: 'none' }}
+                              onClick={() => setEditingOverrideCardId(isEditing ? null : card.id)}
                             >
                               {isEditing ? 'Close' : 'Overrides'}
                             </button>
@@ -587,19 +848,18 @@ export const ExportStudioModal: React.FC<ExportStudioModalProps> = ({
                                 type="button"
                                 data-testid={`card-jump-edit-btn-${idx}`}
                                 className="toolbar-btn"
-                                style={{ width: '32px', height: '32px', minWidth: '32px', fontSize: '12px' }}
+                                style={{ width: '44px', height: '32px', minHeight: '32px', fontSize: '11px' }}
                                 title="Edit in Card Creator"
                                 onClick={() => {
                                   onClose();
                                   onEditCard(card.id);
                                 }}
                               >
-                                ✎
+                                Edit
                               </button>
                             )}
                           </div>
 
-                          {/* Override Editor Drawer */}
                           {isEditing && (
                             <div
                               data-testid={`card-override-drawer-${idx}`}
@@ -607,80 +867,150 @@ export const ExportStudioModal: React.FC<ExportStudioModalProps> = ({
                                 marginTop: '10px',
                                 padding: '10px',
                                 background: 'var(--bg-card)',
-                                borderRadius: '6px',
+                                borderRadius: '8px',
                                 border: '1px solid var(--border)',
                                 display: 'flex',
                                 flexDirection: 'column',
-                                gap: '8px',
+                                gap: '10px',
                               }}
                             >
-                              <div className="input-group">
-                                <label>Custom Title</label>
-                                <input
-                                  type="text"
-                                  data-testid={`card-override-title-input-${idx}`}
-                                  value={override?.customTitle ?? ''}
-                                  placeholder={card.title}
-                                  onChange={(e) => {
-                                    const val = e.target.value;
-                                    setOptions((prev) => ({
-                                      ...prev,
-                                      cardOverrides: {
-                                        ...prev.cardOverrides,
-                                        [card.id]: {
-                                          ...prev.cardOverrides[card.id],
-                                          cardId: card.id,
-                                          customTitle: val || undefined,
-                                        },
-                                      },
-                                    }));
-                                  }}
-                                />
+                              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                                <div className="input-group">
+                                  <label>Custom Title</label>
+                                  <input
+                                    type="text"
+                                    data-testid={`card-override-title-input-${idx}`}
+                                    value={override?.customTitle ?? ''}
+                                    placeholder={card.title}
+                                    onChange={(e) => updateCardOverride(card.id, { customTitle: e.target.value || undefined })}
+                                  />
+                                </div>
+                                <div className="input-group">
+                                  <label>Custom Prompt / Cue</label>
+                                  <input
+                                    type="text"
+                                    data-testid={`card-override-prompt-input-${idx}`}
+                                    value={override?.replacementPrompt ?? ''}
+                                    placeholder={card.shortPrompt || card.prompt}
+                                    onChange={(e) => updateCardOverride(card.id, { replacementPrompt: e.target.value || undefined })}
+                                  />
+                                </div>
+                              </div>
+
+                              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                                <div className="input-group">
+                                  <label>Replacement Formula</label>
+                                  <input
+                                    type="text"
+                                    data-testid={`card-override-formula-input-${idx}`}
+                                    value={override?.replacementFormula ?? ''}
+                                    placeholder={card.latexAnswer}
+                                    onChange={(e) => updateCardOverride(card.id, { replacementFormula: e.target.value || undefined })}
+                                  />
+                                </div>
+                                <div className="input-group">
+                                  <label>Cheat Sheet Note Override</label>
+                                  <input
+                                    type="text"
+                                    data-testid={`card-override-cheatnote-input-${idx}`}
+                                    value={override?.cheatSheetNote ?? ''}
+                                    placeholder={card.cheatSheetNote || 'Short note...'}
+                                    onChange={(e) => updateCardOverride(card.id, { cheatSheetNote: e.target.value || undefined })}
+                                  />
+                                </div>
+                              </div>
+
+                              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
+                                <div className="input-group">
+                                  <label>Title</label>
+                                  <select
+                                    data-testid={`card-override-title-select-${idx}`}
+                                    value={boolToTriState(override?.showCardTitle)}
+                                    onChange={(e) => updateCardOverride(card.id, { showCardTitle: triStateToBool(e.target.value) })}
+                                  >
+                                    <option value="inherit">Global</option>
+                                    <option value="show">Show</option>
+                                    <option value="hide">Hide</option>
+                                  </select>
+                                </div>
+                                <div className="input-group">
+                                  <label>Prompt</label>
+                                  <select
+                                    data-testid={`card-override-prompt-select-${idx}`}
+                                    value={boolToTriState(override?.showPrompt)}
+                                    onChange={(e) => updateCardOverride(card.id, { showPrompt: triStateToBool(e.target.value) })}
+                                  >
+                                    <option value="inherit">Global</option>
+                                    <option value="show">Show</option>
+                                    <option value="hide">Hide</option>
+                                  </select>
+                                </div>
+                                <div className="input-group">
+                                  <label>Formula</label>
+                                  <select
+                                    data-testid={`card-override-formula-select-${idx}`}
+                                    value={boolToTriState(override?.showFormula)}
+                                    onChange={(e) => updateCardOverride(card.id, { showFormula: triStateToBool(e.target.value) })}
+                                  >
+                                    <option value="inherit">Global</option>
+                                    <option value="show">Show</option>
+                                    <option value="hide">Hide</option>
+                                  </select>
+                                </div>
+                                <div className="input-group">
+                                  <label>Terms</label>
+                                  <select
+                                    data-testid={`card-override-terms-select-${idx}`}
+                                    value={boolToTriState(override?.showTerms)}
+                                    onChange={(e) => updateCardOverride(card.id, { showTerms: triStateToBool(e.target.value) })}
+                                  >
+                                    <option value="inherit">Global</option>
+                                    <option value="show">Show</option>
+                                    <option value="hide">Hide</option>
+                                  </select>
+                                </div>
+                                <div className="input-group">
+                                  <label>Term Names</label>
+                                  <select
+                                    data-testid={`card-override-termnames-select-${idx}`}
+                                    value={boolToTriState(override?.showTermNames)}
+                                    onChange={(e) => updateCardOverride(card.id, { showTermNames: triStateToBool(e.target.value) })}
+                                  >
+                                    <option value="inherit">Global</option>
+                                    <option value="show">Show</option>
+                                    <option value="hide">Hide</option>
+                                  </select>
+                                </div>
+                                <div className="input-group">
+                                  <label>Term Defs</label>
+                                  <select
+                                    data-testid={`card-override-termdefs-select-${idx}`}
+                                    value={boolToTriState(override?.showTermDefinitions)}
+                                    onChange={(e) => updateCardOverride(card.id, { showTermDefinitions: triStateToBool(e.target.value) })}
+                                  >
+                                    <option value="inherit">Global</option>
+                                    <option value="show">Show</option>
+                                    <option value="hide">Hide</option>
+                                  </select>
+                                </div>
                               </div>
 
                               <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                                <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px' }}>
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}>
                                   <input
                                     type="checkbox"
                                     data-testid={`card-override-span-toggle-${idx}`}
                                     checked={override?.spanAllColumns ?? false}
-                                    onChange={(e) => {
-                                      const checked = e.target.checked;
-                                      setOptions((prev) => ({
-                                        ...prev,
-                                        cardOverrides: {
-                                          ...prev.cardOverrides,
-                                          [card.id]: {
-                                            ...prev.cardOverrides[card.id],
-                                            cardId: card.id,
-                                            spanAllColumns: checked,
-                                          },
-                                        },
-                                      }));
-                                    }}
+                                    onChange={(e) => updateCardOverride(card.id, { spanAllColumns: e.target.checked })}
                                   />
                                   Span all columns
                                 </label>
-
-                                <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px' }}>
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}>
                                   <input
                                     type="checkbox"
                                     data-testid={`card-override-break-toggle-${idx}`}
                                     checked={override?.pageBreakBefore ?? false}
-                                    onChange={(e) => {
-                                      const checked = e.target.checked;
-                                      setOptions((prev) => ({
-                                        ...prev,
-                                        cardOverrides: {
-                                          ...prev.cardOverrides,
-                                          [card.id]: {
-                                            ...prev.cardOverrides[card.id],
-                                            cardId: card.id,
-                                            pageBreakBefore: checked,
-                                          },
-                                        },
-                                      }));
-                                    }}
+                                    onChange={(e) => updateCardOverride(card.id, { pageBreakBefore: e.target.checked })}
                                   />
                                   Page break before
                                 </label>
@@ -694,7 +1024,7 @@ export const ExportStudioModal: React.FC<ExportStudioModalProps> = ({
                 </div>
               )}
 
-              {/* Tab 2: Layout */}
+              {/* Tab 3: Layout */}
               {activeTab === 'layout' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                   <div className="input-group">
@@ -752,8 +1082,8 @@ export const ExportStudioModal: React.FC<ExportStudioModalProps> = ({
                         }))
                       }
                     >
-                      <option value="narrow">Narrow (20 pt)</option>
-                      <option value="normal">Normal (36 pt)</option>
+                      <option value="narrow">Narrow (28 pt header-safe)</option>
+                      <option value="normal">Normal (38 pt)</option>
                       <option value="wide">Wide (54 pt)</option>
                     </select>
                   </div>
@@ -845,7 +1175,7 @@ export const ExportStudioModal: React.FC<ExportStudioModalProps> = ({
                     <div className="settings-row">
                       <div className="settings-label-group">
                         <label htmlFor="layout-fit-pages-input" className="settings-label">Fit to N Pages Mode</label>
-                        <span className="settings-desc">Auto-adjust font size to fit exact page target</span>
+                        <span className="settings-desc">Auto-adjust scale to fit target page count</span>
                       </div>
                       <input
                         id="layout-fit-pages-input"
@@ -862,120 +1192,6 @@ export const ExportStudioModal: React.FC<ExportStudioModalProps> = ({
                         style={{ width: '80px', minHeight: '36px', height: '36px' }}
                       />
                     </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Tab 3: Content */}
-              {activeTab === 'content' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                  <div className="input-group">
-                    <label htmlFor="content-layout-mode">Card Layout Content</label>
-                    <select
-                      id="content-layout-mode"
-                      data-testid="content-layout-mode-select"
-                      value={options.cardLayoutMode}
-                      onChange={(e) =>
-                        setOptions((prev) => ({
-                          ...prev,
-                          cardLayoutMode: e.target.value as ExportOptions['cardLayoutMode'],
-                        }))
-                      }
-                    >
-                      <option value="prompt-and-formula">Prompt + Formula (Standard)</option>
-                      <option value="formula-only">Formula-Only (Classic Cheat Sheet)</option>
-                      <option value="answer-key">Answer Key (Compact Reference)</option>
-                    </select>
-                  </div>
-
-                  <div className="settings-group">
-                    <div className="settings-row">
-                      <span id="label-show-title" className="settings-label">Show Card Title</span>
-                      <label className="switch">
-                        <input
-                          type="checkbox"
-                          data-testid="content-show-title-toggle"
-                          aria-labelledby="label-show-title"
-                          checked={options.showCardTitle}
-                          onChange={(e) => setOptions((prev) => ({ ...prev, showCardTitle: e.target.checked }))}
-                        />
-                        <span className="switch-slider" />
-                      </label>
-                    </div>
-
-                    <div className="settings-row">
-                      <span id="label-show-number" className="settings-label">Show Card Numbers (#1, #2...)</span>
-                      <label className="switch">
-                        <input
-                          type="checkbox"
-                          data-testid="content-show-number-toggle"
-                          aria-labelledby="label-show-number"
-                          checked={options.showCardNumber}
-                          onChange={(e) => setOptions((prev) => ({ ...prev, showCardNumber: e.target.checked }))}
-                        />
-                        <span className="switch-slider" />
-                      </label>
-                    </div>
-
-                    <div className="settings-row">
-                      <span id="label-show-hints" className="settings-label">Show Hints</span>
-                      <label className="switch">
-                        <input
-                          type="checkbox"
-                          data-testid="content-show-hints-toggle"
-                          aria-labelledby="label-show-hints"
-                          checked={options.showHint}
-                          onChange={(e) => setOptions((prev) => ({ ...prev, showHint: e.target.checked }))}
-                        />
-                        <span className="switch-slider" />
-                      </label>
-                    </div>
-
-                    <div className="settings-row">
-                      <span id="label-inc-appendix" className="settings-label">Include Glossary Appendix</span>
-                      <label className="switch">
-                        <input
-                          type="checkbox"
-                          data-testid="content-include-appendix-toggle"
-                          aria-labelledby="label-inc-appendix"
-                          checked={options.includeGlossaryAppendix}
-                          onChange={(e) => setOptions((prev) => ({ ...prev, includeGlossaryAppendix: e.target.checked }))}
-                        />
-                        <span className="switch-slider" />
-                      </label>
-                    </div>
-                  </div>
-
-                  <div className="input-group">
-                    <label htmlFor="content-terms-mode">Term Definitions Layout</label>
-                    <select
-                      id="content-terms-mode"
-                      data-testid="content-terms-mode-select"
-                      value={options.termsMode}
-                      onChange={(e) =>
-                        setOptions((prev) => ({
-                          ...prev,
-                          termsMode: e.target.value as ExportOptions['termsMode'],
-                        }))
-                      }
-                    >
-                      <option value="compact-inline">Compact Inline List</option>
-                      <option value="table">Small Table / Rows</option>
-                      <option value="footnote">Footnote-Style</option>
-                      <option value="none">Hide Terms</option>
-                    </select>
-                  </div>
-
-                  <div className="input-group">
-                    <label htmlFor="content-header-text">Custom Header Text</label>
-                    <input
-                      id="content-header-text"
-                      type="text"
-                      data-testid="content-header-text-input"
-                      value={options.headerText}
-                      onChange={(e) => setOptions((prev) => ({ ...prev, headerText: e.target.value }))}
-                      placeholder="{setName}"
-                    />
                   </div>
                 </div>
               )}
@@ -1089,7 +1305,7 @@ export const ExportStudioModal: React.FC<ExportStudioModalProps> = ({
                           type="button"
                           data-testid={`builtin-preset-apply-btn-${idx}`}
                           className="btn-primary"
-                          style={{ minHeight: '34px', height: '34px', padding: '0 12px', fontSize: '13px' }}
+                          style={{ minHeight: '34px', height: '34px', padding: '0 12px', fontSize: '13px', flex: 'none' }}
                           onClick={(e) => {
                             e.stopPropagation();
                             handleApplyPreset(preset);
@@ -1119,7 +1335,7 @@ export const ExportStudioModal: React.FC<ExportStudioModalProps> = ({
                                 type="button"
                                 data-testid={`custom-preset-apply-btn-${idx}`}
                                 className="btn-primary"
-                                style={{ minHeight: '34px', height: '34px', padding: '0 10px', fontSize: '12px' }}
+                                style={{ minHeight: '34px', height: '34px', padding: '0 10px', fontSize: '12px', flex: 'none' }}
                                 onClick={() => handleApplyPreset(preset)}
                               >
                                 Apply
@@ -1128,7 +1344,7 @@ export const ExportStudioModal: React.FC<ExportStudioModalProps> = ({
                                 type="button"
                                 data-testid={`custom-preset-delete-btn-${idx}`}
                                 className="btn-danger"
-                                style={{ minHeight: '34px', height: '34px', padding: '0 10px', fontSize: '12px' }}
+                                style={{ minHeight: '34px', height: '34px', padding: '0 10px', fontSize: '12px', flex: 'none' }}
                                 onClick={() => handleDeletePreset(preset.id)}
                               >
                                 Delete
@@ -1157,7 +1373,7 @@ export const ExportStudioModal: React.FC<ExportStudioModalProps> = ({
                         className="btn-primary"
                         disabled={!newPresetName.trim()}
                         onClick={handleSavePreset}
-                        style={{ whiteSpace: 'nowrap' }}
+                        style={{ whiteSpace: 'nowrap', flex: 'none' }}
                       >
                         Save Preset
                       </button>
@@ -1169,7 +1385,6 @@ export const ExportStudioModal: React.FC<ExportStudioModalProps> = ({
           </section>
         </div>
 
-        {/* Footer Actions */}
         <footer className="export-studio-footer">
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             {isExporting && exportProgress && (
@@ -1184,7 +1399,7 @@ export const ExportStudioModal: React.FC<ExportStudioModalProps> = ({
             )}
             {exportSuccess && (
               <span data-testid="export-success-text" style={{ fontSize: '13px', color: 'var(--success)', fontWeight: 600 }}>
-                ✓ Export Complete ({exportSuccess.filename})
+                Export Complete ({exportSuccess.filename})
               </span>
             )}
           </div>
@@ -1213,7 +1428,7 @@ export const ExportStudioModal: React.FC<ExportStudioModalProps> = ({
                   type="button"
                   data-testid="export-pdf-action-btn"
                   className="btn-primary"
-                  disabled={allCards.length === 0}
+                  disabled={allCards.length === 0 || selectedCount === 0}
                   onClick={handleStartExport}
                 >
                   Export PDF

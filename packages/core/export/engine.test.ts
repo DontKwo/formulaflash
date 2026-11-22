@@ -173,4 +173,83 @@ describe('PDF Layout Engine Property Tests', () => {
     expect(duration).toBeLessThan(500);
     expect(doc.pages.length).toBeGreaterThan(10);
   });
+
+  it('defaults showCardNumber to false, distinguishes answer-key from prompt-and-formula, and supports cheat sheet short modes and per-card overrides', () => {
+    expect(DEFAULT_EXPORT_OPTIONS.showCardNumber).toBe(false);
+
+    const setData: SetSourceData = {
+      id: 'cheat-test',
+      name: 'CFD Test Set',
+      glossary: {
+        '\\lambda': {
+          symbol: '\\lambda',
+          name: 'Molecular mean free path',
+          shortName: 'Mean path',
+          definition: 'Average distance traveled by a molecule between successive collisions.',
+          shortDefinition: 'Avg collision free path',
+          units: 'm',
+        },
+        'L': {
+          symbol: 'L',
+          name: 'Characteristic length',
+          shortName: 'Length L',
+          definition: 'Macroscopic length scale.',
+          shortDefinition: 'Macro length scale',
+          units: 'm',
+        },
+      },
+      cards: [
+        {
+          id: 'c1',
+          category: 'Foundations',
+          title: 'Knudsen Number',
+          prompt: 'State the full long-form definition of the Knudsen number with mean free path and length scale:',
+          shortPrompt: 'Knudsen ratio (path / scale)',
+          latexAnswer: 'Kn = \\frac{\\lambda}{L}',
+          cheatSheetNote: 'Continuum holds when Kn < 0.01',
+          explanation: 'Full explanation sentence about rarefied gas regimes.',
+        },
+      ],
+    };
+
+    // 1. Prompt + formula mode (cheat sheet short mode ON, card numbers OFF)
+    const promptDoc = layoutDocument(setData, {
+      ...DEFAULT_EXPORT_OPTIONS,
+      cardLayoutMode: 'prompt-and-formula',
+      useCheatSheetVersion: true,
+      showTermNames: true,
+      showTermDefinitions: false,
+    });
+    const pRuns = promptDoc.pages[0].boxes[0].runs.map((r) => r.text).join(' ');
+    expect(pRuns).not.toContain('#1');
+    expect(pRuns).toContain('Knudsen ratio (path / scale)');
+    expect(pRuns).toContain('Mean path');
+    expect(pRuns).not.toContain('Molecular mean free path');
+
+    // 2. Answer key mode omits question prompt and includes category tag + formula
+    const answerDoc = layoutDocument(setData, {
+      ...DEFAULT_EXPORT_OPTIONS,
+      cardLayoutMode: 'answer-key',
+    });
+    const aRuns = answerDoc.pages[0].boxes[0].runs.map((r) => r.text).join(' ');
+    expect(aRuns).toContain('[Foundations]');
+    expect(aRuns).not.toContain('Knudsen ratio (path / scale)');
+
+    // 3. Only-show-formulas mode with term definitions checked + per-card override enabling prompt
+    const onlyFormulaDoc = layoutDocument(setData, {
+      ...DEFAULT_EXPORT_OPTIONS,
+      onlyShowFormulas: true,
+      showTerms: true,
+      showTermNames: false,
+      showTermDefinitions: true,
+      useCheatSheetVersion: false,
+      cardOverrides: {
+        c1: { cardId: 'c1', showPrompt: true },
+      },
+    });
+    const fRuns = onlyFormulaDoc.pages[0].boxes[0].runs.map((r) => r.text).join(' ');
+    expect(fRuns).toContain('State the full long-form definition');
+    expect(fRuns).toContain('Average distance traveled');
+    expect(fRuns).not.toContain('Knudsen Number');
+  });
 });

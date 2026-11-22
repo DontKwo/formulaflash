@@ -14,16 +14,20 @@ import {
   wrapText,
   measureTextWidth,
   getColorPalette,
+  formatLatexForPdfText,
 } from './geometry.js';
-import type { TermDefinition } from '../model/index.js';
+import { resolveCardTerm, type TermDefinition } from '../model/index.js';
+import { detectFormulaTerms } from '../math/terms.js';
 
 export interface CardSourceData {
   id: string;
   category: string;
   title: string;
   prompt?: string;
+  shortPrompt?: string;
   latexAnswer: string;
   hint?: string;
+  cheatSheetNote?: string;
   explanation?: string;
   terms?: TermDefinition[];
   order?: number;
@@ -39,7 +43,6 @@ export interface SetSourceData {
   glossary?: Record<string, TermDefinition>;
 }
 
-// Category palette mapping for colorful badges
 const CATEGORY_ACCENT_COLORS = [
   '#2563eb', // blue
   '#0d9488', // teal
@@ -61,11 +64,19 @@ function getCategoryColor(category: string): string {
   return CATEGORY_ACCENT_COLORS[idx];
 }
 
+interface MeasuredCardLayout {
+  height: number;
+  runs: TextRun[];
+  formulas: FormulaBlock[];
+  warning?: string;
+}
+
 interface SizedCardBox {
   id: string;
   type: 'card';
   card: CardSourceData;
   override?: CardOverride;
+  measured: MeasuredCardLayout;
   desiredHeight: number;
   spanAllColumns: boolean;
   pageBreakBefore: boolean;
@@ -86,28 +97,66 @@ interface SizedCategoryBox {
 type SizedItem = SizedCardBox | SizedCategoryBox;
 
 /**
- * Calculates formula bounding height in points based on LaTeX structure.
+ * Estimates formula bounding height in points based on LaTeX structure and box width.
  */
-function estimateFormulaHeight(latex: string, fontSize: number): number {
+function estimateFormulaHeight(latex: string, fontSize: number, maxWidth: number): number {
   if (!latex) return 0;
-  let mult = 1.6;
-  if (latex.includes('\\frac') || latex.includes('\\dfrac')) mult += 0.8;
-  if (latex.includes('\\sum') || latex.includes('\\int') || latex.includes('\\prod')) mult += 0.7;
-  if (latex.includes('\\matrix') || latex.includes('\\begin{')) mult += 1.2;
-  if (latex.includes('\\sqrt')) mult += 0.3;
-  return Math.max(fontSize * mult, 18);
+  const lineBreaks = (latex.match(/\\\\/g) || []).length;
+  let rowMult = 1.85;
+  if (latex.includes('\\frac') || latex.includes('\\dfrac') || latex.includes('\\tfrac')) {
+    rowMult += 0.9;
+  }
+  if (latex.includes('\\sum') || latex.includes('\\int') || latex.includes('\\prod') || latex.includes('\\oint')) {
+    rowMult += 0.75;
+  }
+  if (latex.includes('\\begin{')) {
+    rowMult += 0.6 + lineBreaks * 1.15;
+  }
+  if (latex.includes('\\sqrt')) {
+    rowMult += 0.35;
+  }
+  const approxCleanLen = formatLatexForPdfText(latex).length;
+  const approxNaturalW = approxCleanLen * fontSize * 0.55;
+  const wrappedLines = maxWidth > 0 ? Math.max(1, Math.ceil(approxNaturalW / maxWidth)) : 1;
+  const baseH = fontSize * rowMult;
+  return Math.max(baseH, wrappedLines * fontSize * 1.35, 22);
+}
+
+function resolveCardTermsForExport(
+  card: CardSourceData,
+  formulaText: string,
+  setGlossary?: Record<string, TermDefinition>
+): TermDefinition[] {
+  if (card.terms && card.terms.length > 0) {
+    if (!setGlossary) return card.terms;
+    return card.terms.map((t) => {
+      const merged = resolveCardTerm(t.symbol, [t], setGlossary);
+      return merged || t;
+    });
+  }
+  if (!setGlossary || !formulaText) return [];
+  const detected = detectFormulaTerms(formulaText);
+  const resolved: TermDefinition[] = [];
+  for (const sym of detected) {
+    const found = resolveCardTerm(sym, undefined, setGlossary);
+    if (found && (found.name || found.shortName || found.definition || found.shortDefinition)) {
+      resolved.push(found);
+    }
+  }
+  return resolved;
 }
 
 /**
- * Measures the content and computes vertical height for a card.
+ * Computes layout runs, formulas, and height for a single card box.
  */
 function measureCardBox(
   card: CardSourceData,
   index: number,
   colWidth: number,
   options: ExportOptions,
-  override?: CardOverride
-): { height: number; runs: TextRun[]; formulas: FormulaBlock[]; warning?: string } {
+  override?: CardOverride,
+  setGlossary?: Record<string, TermDefinition>
+): MeasuredCardLayout {
   const scale = options.globalScale * (override?.fontSizeOverride ? override.fontSizeOverride / 10 : 1);
   const titleFont = options.titleFontSize * scale;
   const bodyFont = options.bodyFontSize * scale;
@@ -116,26 +165,51 @@ function measureCardBox(
   const termsFont = options.termsFontSize * scale;
   const fontFamily = options.fontFamily;
   const lineSpacing = options.lineSpacing;
-  const padding = options.containerStyle === 'plain' ? 3 : 6;
-  const innerWidth = Math.max(10, colWidth - padding * 2);
+  const isCompactMode = options.cardLayoutMode === 'answer-key' || options.onlyShowFormulas;
+  const padding = options.containerStyle === 'plain' ? 4 : isCompactMode ? 6 : 7;
+  const innerWidth = Math.max(16, colWidth - padding * 2);
 
   const palette = getColorPalette(
     options.colorTheme,
     options.useCategoryColors ? getCategoryColor(card.category || 'General') : undefined
   );
 
+  // Effective flags: per-card override takes precedence over global options
+  const isFormulaOnly = options.onlyShowFormulas || options.cardLayoutMode === 'formula-only';
+  const isAnswerKey = !options.onlyShowFormulas && options.cardLayoutMode === 'answer-key';
+  const useShort = override?.useCheatSheetVersion ?? options.useCheatSheetVersion;
+
+  const showTitle = override?.showCardTitle ?? (options.onlyShowFormulas ? false : options.showCardTitle);
+  const showPrompt =
+    override?.showPrompt ?? (!isFormulaOnly && !isAnswerKey && options.showPrompt);
+  const showFormula = override?.showFormula ?? options.showFormula;
+  const showHint =
+    override?.showHint ??
+    (override?.hideHint !== undefined ? !override.hideHint : (!isFormulaOnly && !isAnswerKey && options.showHint));
+
+  const showTermNames = override?.showTermNames ?? options.showTermNames;
+  const showTermDefs = override?.showTermDefinitions ?? options.showTermDefinitions;
+  const showUnits = override?.showUnits ?? options.showUnits;
+  const hasAnyTermContent = showTermNames || showTermDefs || showUnits;
+  const showTerms =
+    override?.showTerms ?? (options.showTerms && options.termsMode !== 'none' && hasAnyTermContent);
+  const showCheatNote =
+    override?.showCheatSheetNote ?? (!isFormulaOnly && options.showCheatSheetNotes);
+
   const runs: TextRun[] = [];
   const formulas: FormulaBlock[] = [];
   let currentY = padding;
   let cardWarning: string | undefined;
 
-  // 1. Header: Number, Title, Category Badge
-  const titleText = override?.customTitle !== undefined ? override.customTitle : card.title;
+  // 1. Header: Number, Title, Category
+  const rawTitle = override?.customTitle !== undefined ? override.customTitle : card.title;
+  const cleanTitle = formatLatexForPdfText(rawTitle);
   const numberText = options.showCardNumber ? `#${index + 1} ` : '';
-  const fullTitle = `${numberText}${titleText}`.trim();
+  const answerKeyCatTag = isAnswerKey && card.category ? ` [${card.category}]` : '';
+  const fullTitle = `${numberText}${cleanTitle}${answerKeyCatTag}`.trim();
 
-  if (options.showCardTitle && fullTitle) {
-    const titleLines = wrapText(fullTitle, innerWidth, titleFont, fontFamily);
+  if (showTitle && fullTitle) {
+    const titleLines = wrapText(fullTitle, innerWidth, titleFont, fontFamily, true);
     for (const line of titleLines) {
       const lineH = titleFont * lineSpacing;
       runs.push({
@@ -143,7 +217,7 @@ function measureCardBox(
         text: line,
         x: padding,
         y: currentY,
-        width: measureTextWidth(line, titleFont, fontFamily),
+        width: measureTextWidth(line, titleFont, fontFamily, true),
         height: lineH,
         fontSize: titleFont,
         fontFamily,
@@ -152,60 +226,69 @@ function measureCardBox(
       });
       currentY += lineH;
     }
+    currentY += 1.5;
   }
 
-  if (options.showCategoryLabel && card.category) {
-    const catH = hintFont * lineSpacing;
-    runs.push({
-      type: 'text',
-      text: card.category.toUpperCase(),
-      x: padding,
-      y: currentY,
-      width: measureTextWidth(card.category.toUpperCase(), hintFont, fontFamily),
-      height: catH,
-      fontSize: hintFont,
-      fontFamily,
-      style: 'bold',
-      color: palette.accent,
-    });
-    currentY += catH + 2;
-  }
-
-  // 2. Prompt (Question / Term)
-  const showPrompt =
-    options.showPrompt &&
-    options.cardLayoutMode !== 'formula-only' &&
-    (override?.replacementPrompt !== undefined || !!card.prompt);
-
-  const promptText = override?.replacementPrompt !== undefined ? override.replacementPrompt : card.prompt;
-
-  if (showPrompt && promptText) {
-    const promptLines = wrapText(promptText, innerWidth, bodyFont, fontFamily);
-    for (const line of promptLines) {
-      const lineH = bodyFont * lineSpacing;
+  if (options.showCategoryLabel && !isAnswerKey && !isFormulaOnly && card.category) {
+    const catText = card.category.toUpperCase();
+    const catLines = wrapText(catText, innerWidth, hintFont, fontFamily, true);
+    for (const line of catLines) {
+      const catH = hintFont * lineSpacing;
       runs.push({
         type: 'text',
         text: line,
         x: padding,
         y: currentY,
-        width: measureTextWidth(line, bodyFont, fontFamily),
-        height: lineH,
-        fontSize: bodyFont,
+        width: measureTextWidth(line, hintFont, fontFamily, true),
+        height: catH,
+        fontSize: hintFont,
         fontFamily,
-        style: 'regular',
-        color: palette.textSecondary,
+        style: 'bold',
+        color: palette.accent,
       });
-      currentY += lineH;
+      currentY += catH;
     }
     currentY += 2;
+  }
+
+  // 2. Prompt (omitted in formula-only and compact answer-key modes unless overridden)
+  const rawPrompt =
+    override?.replacementPrompt !== undefined
+      ? override.replacementPrompt
+      : useShort && card.shortPrompt
+      ? card.shortPrompt
+      : card.prompt;
+
+  if (showPrompt && rawPrompt) {
+    const cleanPrompt = formatLatexForPdfText(rawPrompt);
+    if (cleanPrompt) {
+      const promptLines = wrapText(cleanPrompt, innerWidth, bodyFont, fontFamily, false);
+      for (const line of promptLines) {
+        const lineH = bodyFont * lineSpacing;
+        runs.push({
+          type: 'text',
+          text: line,
+          x: padding,
+          y: currentY,
+          width: measureTextWidth(line, bodyFont, fontFamily, false),
+          height: lineH,
+          fontSize: bodyFont,
+          fontFamily,
+          style: 'regular',
+          color: palette.textSecondary,
+        });
+        currentY += lineH;
+      }
+      currentY += 2.5;
+    }
   }
 
   // 3. Formula block
   const formulaText =
     override?.replacementFormula !== undefined ? override.replacementFormula : card.latexAnswer;
 
-  if (options.showFormula && formulaText) {
-    const formulaH = estimateFormulaHeight(formulaText, formulaFont);
+  if (showFormula && formulaText) {
+    const formulaH = estimateFormulaHeight(formulaText, formulaFont, innerWidth);
     formulas.push({
       type: 'formula',
       latex: formulaText,
@@ -216,56 +299,97 @@ function measureCardBox(
       fontSize: formulaFont,
       altText: formulaText,
     });
-    currentY += formulaH + 2;
+    currentY += formulaH + 4;
   }
 
-  // 4. Progressive Hint
-  const showHint =
-    options.showHint && !override?.hideHint && card.hint && options.cardLayoutMode !== 'formula-only';
+  // 4. Cheat sheet extra note / explanation summary
+  const rawCheatNote =
+    override?.cheatSheetNote !== undefined
+      ? override.cheatSheetNote
+      : useShort
+      ? card.cheatSheetNote
+      : card.explanation || card.cheatSheetNote;
 
+  if (showCheatNote && rawCheatNote) {
+    const cleanNote = formatLatexForPdfText(rawCheatNote);
+    if (cleanNote) {
+      const prefix = isAnswerKey ? 'Key: ' : '';
+      const cheatLines = wrapText(`${prefix}${cleanNote}`, innerWidth, hintFont, fontFamily, false);
+      for (const line of cheatLines) {
+        const lineH = hintFont * lineSpacing;
+        runs.push({
+          type: 'text',
+          text: line,
+          x: padding,
+          y: currentY,
+          width: measureTextWidth(line, hintFont, fontFamily, false),
+          height: lineH,
+          fontSize: hintFont,
+          fontFamily,
+          style: 'italic',
+          color: palette.textSecondary,
+        });
+        currentY += lineH;
+      }
+      currentY += 2;
+    }
+  }
+
+  // 5. Hint (when enabled)
   if (showHint && card.hint) {
-    const hintLines = wrapText(`Hint: ${card.hint}`, innerWidth, hintFont, fontFamily);
-    for (const line of hintLines) {
-      const lineH = hintFont * lineSpacing;
-      runs.push({
-        type: 'text',
-        text: line,
-        x: padding,
-        y: currentY,
-        width: measureTextWidth(line, hintFont, fontFamily),
-        height: lineH,
-        fontSize: hintFont,
-        fontFamily,
-        style: 'italic',
-        color: palette.textMuted,
-      });
-      currentY += lineH;
+    const cleanHint = formatLatexForPdfText(card.hint);
+    if (cleanHint) {
+      const hintLines = wrapText(`Hint: ${cleanHint}`, innerWidth, hintFont, fontFamily, false);
+      for (const line of hintLines) {
+        const lineH = hintFont * lineSpacing;
+        runs.push({
+          type: 'text',
+          text: line,
+          x: padding,
+          y: currentY,
+          width: measureTextWidth(line, hintFont, fontFamily, false),
+          height: lineH,
+          fontSize: hintFont,
+          fontFamily,
+          style: 'italic',
+          color: palette.textMuted,
+        });
+        currentY += lineH;
+      }
+      currentY += 2;
     }
-    currentY += 2;
   }
 
-  // 5. Term definitions
-  const showTerms =
-    override?.showTerms !== undefined ? override.showTerms : options.termsMode !== 'none';
-
-  if (showTerms && card.terms && card.terms.length > 0 && options.termsMode !== 'none') {
-    let termsToRender = card.terms;
+  // 6. Term definitions (resolves card.terms + setGlossary fallback)
+  if (showTerms && options.termsMode !== 'none') {
+    let termsToRender = resolveCardTermsForExport(card, formulaText, setGlossary);
     if (options.termsFilter === 'only-with-units') {
-      termsToRender = termsToRender.filter((t) => !!t.units);
+      termsToRender = termsToRender.filter((t) => !!t.units && t.units !== 'variable');
     } else if (options.termsFilter === 'exclude-undefined') {
-      termsToRender = termsToRender.filter((t) => !!t.definition || !!t.name);
+      termsToRender = termsToRender.filter(
+        (t) => !!t.definition || !!t.shortDefinition || !!t.name || !!t.shortName
+      );
     }
+
+    const formatTermText = (t: TermDefinition): string => {
+      const sym = formatLatexForPdfText(t.symbol);
+      const namePart = showTermNames ? formatLatexForPdfText((useShort ? t.shortName : undefined) || t.name || '') : '';
+      const defPart = showTermDefs ? formatLatexForPdfText((useShort ? t.shortDefinition : undefined) || t.definition || '') : '';
+      const unitPart = showUnits && t.units && t.units !== 'variable' ? ` [${formatLatexForPdfText(t.units)}]` : '';
+
+      let desc = '';
+      if (namePart && defPart && namePart.toLowerCase() !== defPart.toLowerCase()) {
+        desc = `${namePart} - ${defPart}`;
+      } else {
+        desc = namePart || defPart;
+      }
+      return desc ? `${sym}: ${desc}${unitPart}` : `${sym}${unitPart}`;
+    };
 
     if (termsToRender.length > 0) {
       if (options.termsMode === 'compact-inline') {
-        const termsStr = termsToRender
-          .map((t) => {
-            const unitStr = options.showUnits && t.units ? ` [${t.units}]` : '';
-            return `${t.symbol}: ${t.name || t.definition || ''}${unitStr}`;
-          })
-          .join(' • ');
-
-        const termLines = wrapText(termsStr, innerWidth, termsFont, fontFamily);
+        const termsStr = termsToRender.map(formatTermText).join(' | ');
+        const termLines = wrapText(termsStr, innerWidth, termsFont, fontFamily, false);
         for (const line of termLines) {
           const lineH = termsFont * lineSpacing;
           runs.push({
@@ -273,7 +397,7 @@ function measureCardBox(
             text: line,
             x: padding,
             y: currentY,
-            width: measureTextWidth(line, termsFont, fontFamily),
+            width: measureTextWidth(line, termsFont, fontFamily, false),
             height: lineH,
             fontSize: termsFont,
             fontFamily,
@@ -284,9 +408,8 @@ function measureCardBox(
         }
       } else if (options.termsMode === 'table') {
         for (const t of termsToRender) {
-          const unitStr = options.showUnits && t.units ? ` [${t.units}]` : '';
-          const rowText = `${t.symbol} — ${t.name || t.definition || ''}${unitStr}`;
-          const tLines = wrapText(rowText, innerWidth, termsFont, fontFamily);
+          const rowText = formatTermText(t);
+          const tLines = wrapText(rowText, innerWidth, termsFont, fontFamily, false);
           for (const line of tLines) {
             const lineH = termsFont * lineSpacing;
             runs.push({
@@ -294,7 +417,7 @@ function measureCardBox(
               text: line,
               x: padding,
               y: currentY,
-              width: measureTextWidth(line, termsFont, fontFamily),
+              width: measureTextWidth(line, termsFont, fontFamily, false),
               height: lineH,
               fontSize: termsFont,
               fontFamily,
@@ -306,19 +429,19 @@ function measureCardBox(
         }
       } else if (options.termsMode === 'footnote') {
         for (let i = 0; i < termsToRender.length; i++) {
-          const t = termsToRender[i];
-          const fnText = `[${i + 1}] ${t.symbol}: ${t.definition || t.name || ''}`;
-          const fnLines = wrapText(fnText, innerWidth, termsFont * 0.9, fontFamily);
+          const fnText = `[${i + 1}] ${formatTermText(termsToRender[i])}`;
+          const fnFont = termsFont * 0.92;
+          const fnLines = wrapText(fnText, innerWidth, fnFont, fontFamily, false);
           for (const line of fnLines) {
-            const lineH = termsFont * 0.9 * lineSpacing;
+            const lineH = fnFont * lineSpacing;
             runs.push({
               type: 'text',
               text: line,
               x: padding,
               y: currentY,
-              width: measureTextWidth(line, termsFont * 0.9, fontFamily),
+              width: measureTextWidth(line, fnFont, fontFamily, false),
               height: lineH,
-              fontSize: termsFont * 0.9,
+              fontSize: fnFont,
               fontFamily,
               style: 'regular',
               color: palette.textMuted,
@@ -331,9 +454,10 @@ function measureCardBox(
     }
   }
 
-  // 6. Custom Card Note
+  // 7. Custom Card User Note (per-card override)
   if (options.showNotes && override?.note) {
-    const noteLines = wrapText(`Note: ${override.note}`, innerWidth, hintFont, fontFamily);
+    const cleanCustomNote = formatLatexForPdfText(override.note);
+    const noteLines = wrapText(`Note: ${cleanCustomNote}`, innerWidth, hintFont, fontFamily, false);
     for (const line of noteLines) {
       const lineH = hintFont * lineSpacing;
       runs.push({
@@ -341,7 +465,7 @@ function measureCardBox(
         text: line,
         x: padding,
         y: currentY,
-        width: measureTextWidth(line, hintFont, fontFamily),
+        width: measureTextWidth(line, hintFont, fontFamily, false),
         height: lineH,
         fontSize: hintFont,
         fontFamily,
@@ -350,11 +474,11 @@ function measureCardBox(
       });
       currentY += lineH;
     }
+    currentY += 2;
   }
 
-  const finalHeight = Math.max(currentY + padding, 20);
+  const finalHeight = Math.max(currentY + padding + 2, 24);
 
-  // Check warnings for minimum readable text size (< 6 pt)
   if (titleFont < 6 || bodyFont < 6 || formulaFont < 6) {
     cardWarning = 'Effective font size is below 6 pt. Text may be hard to read when printed.';
   }
@@ -362,9 +486,6 @@ function measureCardBox(
   return { height: finalHeight, runs, formulas, warning: cardWarning };
 }
 
-/**
- * Sorts cards according to export options.
- */
 function sortCards(cards: CardSourceData[], sortOrder: ExportOptions['sortOrder']): CardSourceData[] {
   const result = [...cards];
   switch (sortOrder) {
@@ -377,7 +498,6 @@ function sortCards(cards: CardSourceData[], sortOrder: ExportOptions['sortOrder'
     case 'mastery':
       return result.sort((a, b) => (a.mastery || 0) - (b.mastery || 0));
     case 'shuffled':
-      // Deterministic pseudorandom sort for predictable testing
       return result.sort((a, b) => {
         const hashA = a.id.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
         const hashB = b.id.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
@@ -389,9 +509,6 @@ function sortCards(cards: CardSourceData[], sortOrder: ExportOptions['sortOrder'
   }
 }
 
-/**
- * Builds table of contents and glossary appendix items if enabled.
- */
 function buildAppendixAndToc(
   cards: CardSourceData[],
   options: ExportOptions,
@@ -411,9 +528,7 @@ function buildAppendixAndToc(
     return { appendixItems: [], tocCategories };
   }
 
-  // De-duplicate terms across all selected cards + set glossary
   const termMap = new Map<string, TermDefinition>();
-
   if (setGlossary) {
     for (const [key, term] of Object.entries(setGlossary)) {
       termMap.set(key, term);
@@ -431,22 +546,20 @@ function buildAppendixAndToc(
   }
 
   const sortedTerms = Array.from(termMap.values()).sort((a, b) => a.symbol.localeCompare(b.symbol));
-
   const appendixCards: CardSourceData[] = sortedTerms.map((t, idx) => ({
     id: `glossary-term-${idx}`,
     category: 'Appendix: Glossary',
-    title: t.symbol,
-    prompt: t.name || 'Symbol definition',
+    title: formatLatexForPdfText(t.name || t.symbol),
+    prompt: t.shortDefinition || t.definition || 'Symbol definition',
+    shortPrompt: t.shortName || t.name || 'Symbol',
     latexAnswer: t.symbol,
+    cheatSheetNote: t.definition ? `${t.definition}${t.units ? ` [${t.units}]` : ''}` : undefined,
     explanation: t.definition ? `${t.definition}${t.units ? ` (Units: ${t.units})` : ''}` : undefined,
   }));
 
   return { appendixItems: appendixCards, tocCategories };
 }
 
-/**
- * Pure layout algorithm that generates the document model with pages, columns, and boxes.
- */
 export function layoutDocument(
   setData: SetSourceData,
   options: ExportOptions
@@ -457,22 +570,27 @@ export function layoutDocument(
     options.customPageDimensions
   );
 
-  const margins: Margins = getMargins(options.marginPreset, options.customMargins);
+  const rawMargins = getMargins(options.marginPreset, options.customMargins);
+  const hasHeader = Boolean(options.headerText || options.showDateInHeader);
+  const hasFooter = Boolean(options.footerCustomText || options.showPageNumbers);
+  const margins: Margins = {
+    top: hasHeader ? Math.max(28, rawMargins.top) : rawMargins.top,
+    right: rawMargins.right,
+    bottom: hasFooter ? Math.max(28, rawMargins.bottom) : rawMargins.bottom,
+    left: rawMargins.left,
+  };
 
   const contentWidth = pageWidth - margins.left - margins.right;
   const contentHeight = pageHeight - margins.top - margins.bottom;
 
-  // Filter selected cards
   let activeCards = setData.cards;
   if (options.selectedCardIds && options.selectedCardIds.length > 0) {
     const selectedSet = new Set(options.selectedCardIds);
     activeCards = activeCards.filter((c) => selectedSet.has(c.id));
   }
 
-  // Sort cards
   activeCards = sortCards(activeCards, options.sortOrder);
 
-  // Appendix & TOC
   const { appendixItems, tocCategories } = buildAppendixAndToc(
     activeCards,
     options,
@@ -484,17 +602,15 @@ export function layoutDocument(
     allItemsToLayout.push(...appendixItems);
   }
 
-  // Column calculations
   const cols = Math.max(1, Math.min(6, options.columns));
   const colGap = options.columnGap;
   const rowGap = options.rowGap;
   const standardColWidth = (contentWidth - (cols - 1) * colGap) / cols;
 
   const docWarnings: string[] = [];
-
-  // Group by category if requested
   const itemsWithCategories: SizedItem[] = [];
   let lastCategory = '';
+  let cardNumberCounter = 0;
 
   for (let i = 0; i < allItemsToLayout.length; i++) {
     const card = allItemsToLayout[i];
@@ -516,14 +632,16 @@ export function layoutDocument(
     const override = options.cardOverrides[card.id];
     const isSpan = override?.spanAllColumns ?? false;
     const cardColW = isSpan ? contentWidth : standardColWidth;
-    const { height } = measureCardBox(card, i, cardColW, options, override);
+    const measured = measureCardBox(card, cardNumberCounter, cardColW, options, override, setData.glossary);
+    cardNumberCounter++;
 
     itemsWithCategories.push({
       id: card.id,
       type: 'card',
       card,
       override,
-      desiredHeight: height,
+      measured,
+      desiredHeight: measured.height,
       spanAllColumns: isSpan,
       pageBreakBefore: override?.pageBreakBefore ?? false,
       keepTogether: override?.keepTogether ?? options.keepCardsTogether,
@@ -531,11 +649,10 @@ export function layoutDocument(
     });
   }
 
-  // Pages container
   interface PageState {
     pageNumber: number;
     boxes: BoxItem[];
-    colHeights: number[]; // height used in each column
+    colHeights: number[];
   }
 
   const pages: PageState[] = [];
@@ -551,7 +668,6 @@ export function layoutDocument(
   }
 
   if (itemsWithCategories.length === 0) {
-    // Empty document has 1 empty page
     createNewPage();
   } else {
     let currentPage = createNewPage();
@@ -564,7 +680,6 @@ export function layoutDocument(
       }
 
       if (item.type === 'category-header') {
-        // Category headers span all columns
         const maxCurrentColH = Math.max(...currentPage.colHeights);
         if (maxCurrentColH + item.desiredHeight > contentHeight && currentPage.boxes.length > 0) {
           currentPage = createNewPage();
@@ -611,30 +726,18 @@ export function layoutDocument(
         continue;
       }
 
-      // Card item
       const isSpan = item.spanAllColumns;
-      const targetColWidth = isSpan ? contentWidth : standardColWidth;
       const palette = getColorPalette(options.colorTheme, item.categoryColor);
-
-      const measured = measureCardBox(
-        item.card,
-        itemIdx,
-        targetColWidth,
-        options,
-        item.override
-      );
+      const measured = item.measured;
 
       if (measured.warning && !docWarnings.includes(measured.warning)) {
         docWarnings.push(measured.warning);
       }
 
       const boxHeight = measured.height;
-
-      // Column placement strategy
       let placed = false;
 
       if (isSpan) {
-        // Spans all columns: needs space below highest column
         const maxH = Math.max(...currentPage.colHeights);
         if (maxH + boxHeight > contentHeight && currentPage.boxes.length > 0) {
           currentPage = createNewPage();
@@ -667,10 +770,8 @@ export function layoutDocument(
         }
         placed = true;
       } else {
-        // Down columns or across rows
         let bestCol = 0;
         if (options.fillOrder === 'across-rows') {
-          // Find column with minimum height
           let minH = Infinity;
           for (let c = 0; c < cols; c++) {
             if (currentPage.colHeights[c] < minH) {
@@ -679,7 +780,6 @@ export function layoutDocument(
             }
           }
         } else {
-          // Down columns: fill column 0 first until full, then col 1, etc.
           for (let c = 0; c < cols; c++) {
             if (currentPage.colHeights[c] + boxHeight <= contentHeight) {
               bestCol = c;
@@ -689,14 +789,9 @@ export function layoutDocument(
           }
         }
 
-        if (!placed) {
-          // If fillOrder was across-rows, or down-columns found no column on this page that fits
-          if (currentPage.colHeights[bestCol] + boxHeight > contentHeight) {
-            if (currentPage.boxes.length > 0) {
-              currentPage = createNewPage();
-              bestCol = 0;
-            }
-          }
+        if (!placed && currentPage.colHeights[bestCol] + boxHeight > contentHeight && currentPage.boxes.length > 0) {
+          currentPage = createNewPage();
+          bestCol = 0;
         }
 
         const colX = margins.left + bestCol * (standardColWidth + colGap);
@@ -728,7 +823,6 @@ export function layoutDocument(
     }
   }
 
-  // Header & Footer generation
   const totalPages = pages.length;
   const formattedPages: PageModel[] = pages.map((p) => {
     const pageHeader = options.headerText.replace('{setName}', setData.name || 'Formula Flash');
@@ -751,13 +845,11 @@ export function layoutDocument(
     };
   });
 
-  // Bookmarks
   const bookmarks: Array<{ title: string; pageNumber: number; level: number }> = [];
   if (options.generatePdfBookmarks) {
     bookmarks.push({ title: setData.name || 'Cheat Sheet', pageNumber: 1, level: 1 });
     if (options.groupByCategory) {
       for (const cat of tocCategories) {
-        // Find page where category header appears
         const targetPage = formattedPages.find((p) =>
           p.boxes.some((b) => b.type === 'category-header' && b.runs.some((r) => r.text === cat.toUpperCase()))
         );
@@ -792,8 +884,7 @@ export function layoutDocument(
 }
 
 /**
- * Fit-to-N-Pages auto-scaling mode.
- * Performs a binary search over globalScale to find the largest scale that fits within target page count.
+ * Fit-to-N-Pages auto-scaling mode via binary search over globalScale.
  */
 export function layoutWithAutoFit(
   setData: SetSourceData,
@@ -808,22 +899,20 @@ export function layoutWithAutoFit(
   let highScale = 2.0;
   let bestDoc = layoutDocument(setData, { ...options, globalScale: lowScale });
 
-  // If even lowest scale exceeds target, return it with warning
   if (bestDoc.pages.length > targetPages) {
     bestDoc.warnings.push(`Could not fit all cards onto ${targetPages} pages even at minimum font size.`);
     return bestDoc;
   }
 
-  // Binary search for highest scale that still produces <= targetPages
   for (let iter = 0; iter < 8; iter++) {
     const midScale = (lowScale + highScale) / 2;
     const testDoc = layoutDocument(setData, { ...options, globalScale: midScale });
 
     if (testDoc.pages.length <= targetPages) {
       bestDoc = testDoc;
-      lowScale = midScale; // try larger font
+      lowScale = midScale;
     } else {
-      highScale = midScale; // scale too large, back off
+      highScale = midScale;
     }
   }
 

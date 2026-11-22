@@ -7,7 +7,32 @@ import {
   type SetSourceData,
 } from '@formulaflash/core';
 import { writeDocumentToPdf } from './pdf-writer.ts';
-import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.mjs';
+import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.mjs'; // noqa: 8
+
+type WithResolversCtor = PromiseConstructor & {
+  withResolvers?: <T>() => {
+    promise: Promise<T>;
+    resolve: (value: T | PromiseLike<T>) => void;
+    reject: (reason?: unknown) => void;
+  };
+};
+
+const promiseCtor = Promise as WithResolversCtor;
+if (typeof promiseCtor.withResolvers !== 'function') {
+  promiseCtor.withResolvers = function polyfillWithResolvers<T>(): {
+    promise: Promise<T>;
+    resolve: (value: T | PromiseLike<T>) => void;
+    reject: (reason?: unknown) => void;
+  } {
+    let resolve!: (value: T | PromiseLike<T>) => void;
+    let reject!: (reason?: unknown) => void;
+    const promise = new Promise<T>((res, rej) => {
+      resolve = res;
+      reject = rej;
+    });
+    return { promise, resolve, reject };
+  };
+}
 
 describe('PDF Writer & Output Validation', () => {
   const sampleSet: SetSourceData = {

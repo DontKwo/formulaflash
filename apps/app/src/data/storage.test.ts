@@ -16,7 +16,13 @@ const fakeLocalStorage = {
 
 (globalThis as unknown as { localStorage: typeof fakeLocalStorage }).localStorage = fakeLocalStorage;
 
-import { loadSets, CFD_DEFAULT_SET_ID } from './storage';
+import {
+  loadSets,
+  saveSet,
+  saveSetGlossary,
+  importStarterDeck,
+  CFD_DEFAULT_SET_ID,
+} from './storage';
 
 describe('Storage and Versioned Seeding', () => {
   beforeEach(() => {
@@ -29,7 +35,7 @@ describe('Storage and Versioned Seeding', () => {
     expect(sets[0].id).toBe(CFD_DEFAULT_SET_ID);
     expect(sets[0].name).toBe('CFD: Complete Reference');
     expect(sets[0].cards.length).toBe(1500);
-    expect(fakeLocalStorage.getItem('formulaflash_seed_version')).toBe('2');
+    expect(fakeLocalStorage.getItem('formulaflash_seed_version')).toBe('3');
   });
 
   it('preserves existing custom user sets and non-destructively adds CFD deck', () => {
@@ -37,6 +43,7 @@ describe('Storage and Versioned Seeding', () => {
       id: 'my-custom-deck',
       name: 'Aerospace Propulsion 101',
       category: 'Aerospace',
+      glossary: {},
       cards: [
         {
           id: 'custom-01',
@@ -44,6 +51,7 @@ describe('Storage and Versioned Seeding', () => {
           title: 'Thrust Equation',
           prompt: 'Thrust formula:',
           latexAnswer: 'F = \\dot{m} v_e + (p_e - p_0) A_e',
+          hint: 'Mass flow times exhaust velocity plus pressure thrust.',
           explanation: 'Standard rocket thrust equation.',
         },
       ],
@@ -62,7 +70,7 @@ describe('Storage and Versioned Seeding', () => {
     expect(foundCfd).toBeDefined();
     expect(foundCfd?.cards.length).toBe(1500);
 
-    expect(fakeLocalStorage.getItem('formulaflash_seed_version')).toBe('2');
+    expect(fakeLocalStorage.getItem('formulaflash_seed_version')).toBe('3');
   });
 
   it('does not duplicate CFD deck on subsequent loads', () => {
@@ -70,5 +78,32 @@ describe('Storage and Versioned Seeding', () => {
     const secondLoad = loadSets();
     const cfdDecks = secondLoad.filter((s) => s.id === CFD_DEFAULT_SET_ID);
     expect(cfdDecks.length).toBe(1);
+  });
+
+  it('keeps glossaries strictly per-deck without global pollution', () => {
+    loadSets();
+    saveSet({
+      id: 'deck-a',
+      name: 'Deck A',
+      category: 'Physics',
+      cards: [],
+      glossary: {},
+    });
+    const imported = importStarterDeck('algebra');
+    expect(imported).not.toBeNull();
+    expect(imported?.glossary).toEqual({});
+
+    saveSetGlossary('deck-a', {
+      k: { symbol: 'k', name: 'Spring constant', definition: 'Hooke stiffness.', units: 'N/m' },
+    });
+
+    const setsAfter = loadSets();
+    const deckA = setsAfter.find((s) => s.id === 'deck-a');
+    const deckB = setsAfter.find((s) => s.id === 'starter-algebra');
+    const cfdDeck = setsAfter.find((s) => s.id === CFD_DEFAULT_SET_ID);
+
+    expect(deckA?.glossary.k?.name).toBe('Spring constant');
+    expect(deckB?.glossary.k).toBeUndefined();
+    expect(cfdDeck?.glossary.k?.name).toBe('TKE / thermal conductivity');
   });
 });
