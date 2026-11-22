@@ -169,8 +169,13 @@ export const ExportStudioModal: React.FC<ExportStudioModalProps> = ({
   const [debouncedDocModel, setDebouncedDocModel] = useState<DocumentModel>(() =>
     layoutWithAutoFit(activeSet, options)
   );
+  const isInitialMount = useRef(true);
 
   useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
     const timer = setTimeout(() => {
       const model = layoutWithAutoFit(activeSet, options);
       setDebouncedDocModel(model);
@@ -293,7 +298,8 @@ export const ExportStudioModal: React.FC<ExportStudioModalProps> = ({
                   <p>This deck has no cards yet to export.</p>
                 </div>
               ) : (
-                debouncedDocModel.pages.slice(0, 10).map((page) => {
+                <>
+                  {debouncedDocModel.pages.slice(0, 2).map((page) => {
                   const previewScale = 0.68;
                   const pWidth = page.width * previewScale;
                   const pHeight = page.height * previewScale;
@@ -427,7 +433,13 @@ export const ExportStudioModal: React.FC<ExportStudioModalProps> = ({
                       )}
                     </div>
                   );
-                })
+                })}
+                  {debouncedDocModel.pages.length > 2 && (
+                    <div style={{ textAlign: 'center', padding: '8px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                      Showing live preview of first 2 pages ({debouncedDocModel.pages.length} total pages in full PDF).
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </section>

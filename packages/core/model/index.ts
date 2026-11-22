@@ -146,10 +146,34 @@ export function sanitizeTermDefinition(term: TermDefinition): TermDefinition {
   };
 }
 
+const glossaryLookupCache = new WeakMap<Record<string, TermDefinition>, Map<string, TermDefinition>>();
+
+function getNormalizedGlossaryMap(setGlossary: Record<string, TermDefinition>): Map<string, TermDefinition> {
+  const cached = glossaryLookupCache.get(setGlossary);
+  if (cached) {
+    return cached;
+  }
+  const map = new Map<string, TermDefinition>();
+  for (const [key, term] of Object.entries(setGlossary)) {
+    const normKey = normalizeSymbolKey(key);
+    if (normKey && !map.has(normKey)) {
+      map.set(normKey, term);
+    }
+    if (term.symbol) {
+      const normSym = normalizeSymbolKey(term.symbol);
+      if (normSym && !map.has(normSym)) {
+        map.set(normSym, term);
+      }
+    }
+  }
+  glossaryLookupCache.set(setGlossary, map);
+  return map;
+}
+
 /**
  * Resolves a term for a given symbol:
  * 1. Card's own terms
- * 2. Set glossary
+ * 2. Set glossary (indexed by normalized key)
  * 3. undefined
  */
 export function resolveCardTerm(
@@ -170,13 +194,15 @@ export function resolveCardTerm(
     }
   }
 
-  // 2. Check set glossary next
+  // 2. Check set glossary next via indexed normalized lookup
   if (setGlossary) {
-    for (const [key, term] of Object.entries(setGlossary)) {
-      if (normalizeSymbolKey(key) === targetKey || normalizeSymbolKey(term.symbol) === targetKey) {
-        return term;
-      }
+    if (Object.hasOwn(setGlossary, symbol)) {
+      return setGlossary[symbol];
     }
+    if (Object.hasOwn(setGlossary, targetKey)) {
+      return setGlossary[targetKey];
+    }
+    return getNormalizedGlossaryMap(setGlossary).get(targetKey);
   }
 
   // 3. Fallback to undefined

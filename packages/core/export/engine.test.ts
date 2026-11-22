@@ -252,4 +252,36 @@ describe('PDF Layout Engine Property Tests', () => {
     expect(fRuns).toContain('Average distance traveled');
     expect(fRuns).not.toContain('Knudsen Number');
   });
+
+  it('layouts 1,500 cards with a 2,166-entry glossary under 500 ms', () => {
+    const glossary: Record<string, { symbol: string; name: string; definition: string; units: string }> = {};
+    for (let g = 0; g < 2166; g++) {
+      const sym = g < 26 ? `\\alpha_{${g}}` : `q_{${g}}`;
+      glossary[sym] = {
+        symbol: sym,
+        name: `Variable ${g}`,
+        definition: `Definition for symbol ${g}.`,
+        units: 'm/s',
+      };
+    }
+
+    const cards: CardSourceData[] = Array.from({ length: 1500 }, (_, i) => ({
+      id: `cfd-bench-${i}`,
+      category: `Category ${i % 12}`,
+      title: `Formula ${i}`,
+      prompt: `Prompt for formula ${i}`,
+      latexAnswer: `q_{${(i * 3) % 2000}} = \\alpha_{${i % 26}} + q_{${(i * 7 + 1) % 2000}}`,
+      hint: `Hint ${i}`,
+    }));
+
+    const start = performance.now();
+    const doc = layoutDocument(
+      { id: 'cfd-bench', name: 'CFD Scale Test', glossary, cards },
+      { ...DEFAULT_EXPORT_OPTIONS, showTerms: true, includeGlossaryAppendix: false }
+    );
+    const duration = performance.now() - start;
+
+    expect(doc.pages.length).toBeGreaterThan(50);
+    expect(duration).toBeLessThan(500);
+  });
 });

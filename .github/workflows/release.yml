@@ -8,6 +8,9 @@ on:
       - 'main'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   release-android:
     runs-on: ubuntu-latest
@@ -27,6 +30,13 @@ jobs:
       - run: pnpm --filter app run build
       - run: cd apps/app && npx cap sync android
       - run: cd apps/app/android && chmod +x ./gradlew && ./gradlew assembleRelease
-      - uses: softprops/action-gh-release@v2
+      - name: Upload unsigned release APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-unsigned
+          path: apps/app/android/app/build/outputs/apk/release/app-release-unsigned.apk
+      - name: Publish tagged GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
         with:
           files: apps/app/android/app/build/outputs/apk/release/app-release-unsigned.apk
