@@ -2108,5 +2108,84 @@
       "mu / rho"
     ],
     "expectedEffect": "Updates term shortDefinition for this deck"
+  },
+  {
+    "screen": "home",
+    "testId": "mode-tab-home",
+    "role": "tab",
+    "label": "Home",
+    "preconditions": "Top navigation bar visible",
+    "inputs": [],
+    "expectedEffect": "Navigates to Home library dashboard"
+  },
+  {
+    "screen": "home",
+    "testId": "home-search-input",
+    "role": "textbox",
+    "label": "Search study sets",
+    "preconditions": "Home library dashboard active",
+    "inputs": [
+      "CFD",
+      "Algebra"
+    ],
+    "expectedEffect": "Filters sets and starter decks on Home dashboard"
+  },
+  {
+    "screen": "home",
+    "testId": "home-create-set-btn",
+    "role": "button",
+    "label": "Create New Set",
+    "preconditions": "Home library dashboard active",
+    "inputs": [],
+    "expectedEffect": "Toggles inline set creation form on Home"
+  },
+  {
+    "screen": "home",
+    "testId": "home-create-name-input",
+    "role": "textbox",
+    "label": "Set Title",
+    "preconditions": "Home create set form open",
+    "inputs": [
+      "Physics 101"
+    ],
+    "expectedEffect": "Sets title for new study set"
+  },
+  {
+    "screen": "home",
+    "testId": "home-create-category-input",
+    "role": "textbox",
+    "label": "Subject / Category",
+    "preconditions": "Home create set form open",
+    "inputs": [
+      "Physics"
+    ],
+    "expectedEffect": "Sets category for new study set"
+  },
+  {
+    "screen": "home",
+    "testId": "home-create-cancel-btn",
+    "role": "button",
+    "label": "Cancel",
+    "preconditions": "Home create set form open",
+    "inputs": [],
+    "expectedEffect": "Closes inline set creation form on Home"
+  },
+  {
+    "screen": "home",
+    "testId": "home-create-submit-btn",
+    "role": "button",
+    "label": "Create Set",
+    "preconditions": "Home create set form open with title",
+    "inputs": [],
+    "expectedEffect": "Creates new study set and opens it"
+  },
+  {
+    "screen": "learn",
+    "testId": "back-to-home-btn",
+    "role": "button",
+    "label": "Back to Sets",
+    "preconditions": "Study or Learn workspace active",
+    "inputs": [],
+    "expectedEffect": "Returns to Home library dashboard"
   }
 ]

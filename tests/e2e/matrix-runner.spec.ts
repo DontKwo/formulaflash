@@ -58,7 +58,13 @@ test.describe('UI Matrix Layer', () => {
   test('@smoke Navigation and core mode switching', async ({ page }) => {
     await page.goto('/');
 
-    await page.waitForSelector('[data-testid="mode-tab-learn"]');
+    await page.waitForSelector('[data-testid="mode-tab-home"]');
+    await page.waitForSelector('[data-testid="home-create-set-btn"]');
+    await assertInvariants(page, 'home');
+
+    // Switch to learn mode
+    await page.click('[data-testid="mode-tab-learn"]');
+    await page.waitForSelector('[data-testid="learn-prev-btn"]');
     await assertInvariants(page, 'learn');
 
     // Switch to study mode
@@ -154,6 +160,7 @@ test.describe('UI Matrix Layer', () => {
   for (const [idx, formula] of corpus.formulaCorpus.trivial.slice(0, 5).entries()) {
     test(`@matrix Learn check with formula variant #${idx}: ${formula}`, async ({ page }) => {
       await page.goto('/');
+      await page.click('[data-testid="mode-tab-learn"]');
       const switchBtn = page.locator('[data-testid="learn-switch-write-btn"]');
       if (await switchBtn.isVisible()) {
         const label = await switchBtn.innerText();

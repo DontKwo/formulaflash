@@ -321,7 +321,7 @@ export const ExportStudioModal: React.FC<ExportStudioModalProps> = ({
                             position: 'absolute',
                             top: `${Math.max(4, page.margins.top - 16) * previewScale}px`,
                             left: `${page.margins.left * previewScale}px`,
-                            fontSize: `${7.5 * previewScale}pt`,
+                            fontSize: `${7.5 * previewScale}px`,
                             color: '#64748b',
                           }}
                         >
@@ -335,7 +335,7 @@ export const ExportStudioModal: React.FC<ExportStudioModalProps> = ({
                             position: 'absolute',
                             top: `${Math.max(4, page.margins.top - 16) * previewScale}px`,
                             right: `${page.margins.right * previewScale}px`,
-                            fontSize: `${7.5 * previewScale}pt`,
+                            fontSize: `${7.5 * previewScale}px`,
                             color: '#64748b',
                           }}
                         >
@@ -358,7 +358,7 @@ export const ExportStudioModal: React.FC<ExportStudioModalProps> = ({
                               left: `${box.rect.x * previewScale}px`,
                               top: `${box.rect.y * previewScale}px`,
                               width: `${box.rect.width * previewScale}px`,
-                              minHeight: `${box.rect.height * previewScale}px`,
+                              height: `${box.rect.height * previewScale}px`,
                               backgroundColor: box.backgroundColor || 'transparent',
                               border: box.borderWidth
                                 ? `${Math.max(0.5, box.borderWidth * previewScale)}px solid ${box.borderColor || '#cbd5e1'}`
@@ -374,11 +374,11 @@ export const ExportStudioModal: React.FC<ExportStudioModalProps> = ({
                                 <div
                                   key={item.key}
                                   style={{
-                                    fontSize: `${item.data.fontSize * previewScale}pt`,
+                                    fontSize: `${item.data.fontSize * previewScale}px`,
                                     fontWeight: item.data.style === 'bold' ? 700 : 400,
                                     fontStyle: item.data.style === 'italic' ? 'italic' : 'normal',
                                     color: item.data.color,
-                                    lineHeight: 1.2,
+                                    lineHeight: 1.15,
                                     whiteSpace: 'normal',
                                     wordBreak: 'break-word',
                                   }}
@@ -390,7 +390,7 @@ export const ExportStudioModal: React.FC<ExportStudioModalProps> = ({
                                   key={item.key}
                                   style={{
                                     margin: `${2 * previewScale}px 0`,
-                                    fontSize: `${item.data.fontSize * previewScale}pt`,
+                                    fontSize: `${item.data.fontSize * previewScale}px`,
                                     color: '#0f172a',
                                     maxWidth: '100%',
                                     overflowX: 'hidden',
@@ -410,7 +410,7 @@ export const ExportStudioModal: React.FC<ExportStudioModalProps> = ({
                             position: 'absolute',
                             bottom: `${Math.max(4, page.margins.bottom - 16) * previewScale}px`,
                             left: `${page.margins.left * previewScale}px`,
-                            fontSize: `${7.5 * previewScale}pt`,
+                            fontSize: `${7.5 * previewScale}px`,
                             color: '#64748b',
                           }}
                         >
@@ -424,7 +424,7 @@ export const ExportStudioModal: React.FC<ExportStudioModalProps> = ({
                             position: 'absolute',
                             bottom: `${Math.max(4, page.margins.bottom - 16) * previewScale}px`,
                             right: `${page.margins.right * previewScale}px`,
-                            fontSize: `${7.5 * previewScale}pt`,
+                            fontSize: `${7.5 * previewScale}px`,
                             color: '#64748b',
                           }}
                         >

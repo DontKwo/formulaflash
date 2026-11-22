@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import type { TermDefinition } from '@formulaflash/core';
-import { normalizeSymbolKey, getSuggestionsForSymbol } from '@formulaflash/core';
+import { normalizeSymbolKey, getSuggestionsForSymbol, detectFormulaTerms } from '@formulaflash/core';
 import { MathDisplay, MathText } from './MathDisplay.tsx';
 import type { FlashcardSet } from '../data/storage.ts';
 
@@ -31,14 +31,26 @@ export const SetGlossaryModal: React.FC<SetGlossaryModalProps> = ({
     const counts = new Map<string, { symbol: string; count: number; cards: string[] }>();
 
     for (const card of activeSet.cards) {
-      if (card.terms) {
+      const cardSymbols = new Set<string>();
+      if (card.terms && card.terms.length > 0) {
         for (const t of card.terms) {
-          const k = normalizeSymbolKey(t.symbol);
-          const existing = counts.get(k) || { symbol: t.symbol, count: 0, cards: [] };
-          existing.count += 1;
-          existing.cards.push(card.title);
-          counts.set(k, existing);
+          cardSymbols.add(t.symbol);
         }
+      } else if (card.latexAnswer) {
+        for (const sym of detectFormulaTerms(card.latexAnswer)) {
+          cardSymbols.add(sym);
+        }
+      }
+
+      const seenKeys = new Set<string>();
+      for (const sym of cardSymbols) {
+        const k = normalizeSymbolKey(sym);
+        if (seenKeys.has(k)) continue;
+        seenKeys.add(k);
+        const existing = counts.get(k) || { symbol: sym, count: 0, cards: [] };
+        existing.count += 1;
+        existing.cards.push(card.title);
+        counts.set(k, existing);
       }
     }
 
@@ -141,7 +153,7 @@ export const SetGlossaryModal: React.FC<SetGlossaryModalProps> = ({
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: selectedSymbol ? '1fr 1fr' : '1fr', gap: '16px', overflowY: 'auto', maxHeight: '55vh' }}>
-          <div className="set-list" role="listbox" aria-label="Deck Symbols">
+          <div className="set-list" role="listbox" aria-label="Deck Symbols" style={{ maxHeight: 'none', overflowY: 'visible' }}>
             {filteredSymbols.length === 0 ? (
               <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-secondary)' }}>
                 No symbols defined for this deck yet.
