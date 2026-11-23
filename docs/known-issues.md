@@ -7,5 +7,13 @@ The following edge cases were evaluated by the exhaustive testing harness and do
    - **Status:** Mitigated with input bounds checks and timeout limits in `MathChecker`.
 
 2. **European Comma Separators in LaTeX Environments**
-   - **Diagnosis:** Inputs such as `1,5` in standard LaTeX math modes are parsed as coordinates/lists rather than decimals unless wrapped in `{}` or handled by locale decimal rules.
-   - **Status:** Handled via numeric checker preprocessing, power users recommended to use standard dot notation in formulas.
+   - **Diagnosis:** Inputs such as `1,5` in standard LaTeX math modes are parsed as coordinates or lists instead of decimals unless wrapped in `{}` or handled by locale decimal rules.
+   - **Status:** Handled via numeric checker preprocessing; standard dot notation is recommended in formulas.
+
+## Related Documentation
+
+- [Project Overview](../README.md)
+- [User Guide](USER_GUIDE.md)
+- [Expression Language](EXPRESSION_LANGUAGE.md)
+- [Developer Guide](DEVELOPMENT.md)
+- [Testing Guide](testing.md)

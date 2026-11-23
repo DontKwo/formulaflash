@@ -1,16 +1,23 @@
 # Human Setup Instructions
 
-This document lists steps that must be performed by a human, usually involving secrets or sensitive accounts. **Never commit secrets to this repository.**
+This document lists repository steps that require maintainer credentials or keystore provisioning. **Never commit secrets or `.jks` files to this repository.**
 
-## Android Setup
-To produce signed releases, you need to set up a Keystore and provide secrets to GitHub Actions.
+## Android Release Keystore Setup
 
-1. Generate a keystore:
+1. Generate an RSA 2048 keystore outside the repository:
    ```bash
-   keytool -genkey -v -keystore formulaflash.keystore -alias formulaflash -keyalg RSA -keysize 2048 -validity 10000
+   keytool -genkeypair -v -keystore formulaflash-release.jks -alias formulaflash -keyalg RSA -keysize 2048 -validity 10000
    ```
-2. In your GitHub repository settings under **Secrets and variables > Actions**, add the following repository secrets:
-   - `ANDROID_KEYSTORE_BASE64` (Base64 representation of the formulaflash.keystore file)
-   - `ANDROID_KEYSTORE_PASSWORD`
-   - `ANDROID_KEY_ALIAS`
-   - `ANDROID_KEY_PASSWORD`
+2. Add these repository secrets under **Settings > Secrets and variables > Actions** on `DontKwo/formulaflash`:
+   - `ANDROID_KEYSTORE_BASE64`: Base64-encoded keystore contents
+   - `ANDROID_KEYSTORE_PASSWORD`: Keystore password
+   - `ANDROID_KEY_ALIAS`: Signing key alias (`formulaflash`)
+   - `ANDROID_KEY_PASSWORD`: Signing key password
+
+## Related Documentation
+
+- [Project Overview](../README.md)
+- [Developer Guide](DEVELOPMENT.md)
+- [System Architecture](ARCHITECTURE.md)
+- [Android APK Installation Guide](APK_INSTALLATION.md)
+- [Security Policy](../SECURITY.md)

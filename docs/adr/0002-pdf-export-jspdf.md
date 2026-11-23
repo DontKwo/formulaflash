@@ -24,3 +24,11 @@ STEM students frequently require printable reference formula sheets and cheat sh
 ## Consequences
 - Clean separation of concerns with full testability via fast-check property testing and golden PDF validation.
 - Minimal bundle impact due to dynamic module imports and worker isolation.
+
+## Related Documentation
+
+- [Project Overview](../../README.md)
+- [System Architecture](../ARCHITECTURE.md)
+- [Developer Guide](../DEVELOPMENT.md)
+- [User Guide](../USER_GUIDE.md)
+- [Security Policy](../../SECURITY.md)

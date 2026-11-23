@@ -61,3 +61,12 @@ When `strictDomains: false` (default), conditional equivalences are accepted and
 | Unsupported / Inconclusive | Grammar limit or divergence | Inconclusive | `indeterminate` |
 
 Numerical sampling is used exclusively to find refuting counterexamples or as an auxiliary fallback. It does not replace symbolic proof.
+
+## Related Documentation
+
+- [Project Overview](../README.md)
+- [System Architecture](ARCHITECTURE.md)
+- [User Guide](USER_GUIDE.md)
+- [Testing Guide](testing.md)
+- [Known Issues](known-issues.md)
+- [Developer Guide](DEVELOPMENT.md)

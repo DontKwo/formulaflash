@@ -1,0 +1,1609 @@
+{
+  "run_id": "formulaflash-playwright-edge",
+  "framework": "web",
+  "commit": "HEAD",
+  "interactions": [
+    {
+      "control_id": "home.ctrl_0",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::home::home.ctrl_0",
+      "sequence_number": 1,
+      "screen_state_id": "home"
+    },
+    {
+      "control_id": "mode-tab-home",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::home::mode-tab-home",
+      "sequence_number": 2,
+      "screen_state_id": "home"
+    },
+    {
+      "control_id": "mode-tab-learn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::home::mode-tab-learn",
+      "sequence_number": 3,
+      "screen_state_id": "home"
+    },
+    {
+      "control_id": "mode-tab-study",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::home::mode-tab-study",
+      "sequence_number": 4,
+      "screen_state_id": "home"
+    },
+    {
+      "control_id": "mode-tab-analytics",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::home::mode-tab-analytics",
+      "sequence_number": 5,
+      "screen_state_id": "home"
+    },
+    {
+      "control_id": "nav-decks-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::home::nav-decks-btn",
+      "sequence_number": 6,
+      "screen_state_id": "home"
+    },
+    {
+      "control_id": "nav-export-pdf-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::home::nav-export-pdf-btn",
+      "sequence_number": 7,
+      "screen_state_id": "home"
+    },
+    {
+      "control_id": "nav-add-card-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::home::nav-add-card-btn",
+      "sequence_number": 8,
+      "screen_state_id": "home"
+    },
+    {
+      "control_id": "nav-settings-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::home::nav-settings-btn",
+      "sequence_number": 9,
+      "screen_state_id": "home"
+    },
+    {
+      "control_id": "home-search-input",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::home::home-search-input",
+      "sequence_number": 10,
+      "screen_state_id": "home"
+    },
+    {
+      "control_id": "home-create-set-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::home::home-create-set-btn",
+      "sequence_number": 11,
+      "screen_state_id": "home"
+    },
+    {
+      "control_id": "home-set-learn-0",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::home::home-set-learn-0",
+      "sequence_number": 12,
+      "screen_state_id": "home"
+    },
+    {
+      "control_id": "home-set-study-0",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::home::home-set-study-0",
+      "sequence_number": 13,
+      "screen_state_id": "home"
+    },
+    {
+      "control_id": "home-set-glossary-0",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::home::home-set-glossary-0",
+      "sequence_number": 14,
+      "screen_state_id": "home"
+    },
+    {
+      "control_id": "home-set-pdf-0",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::home::home-set-pdf-0",
+      "sequence_number": 15,
+      "screen_state_id": "home"
+    },
+    {
+      "control_id": "home-starter-btn-0",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::home::home-starter-btn-0",
+      "sequence_number": 16,
+      "screen_state_id": "home"
+    },
+    {
+      "control_id": "home-starter-btn-1",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::home::home-starter-btn-1",
+      "sequence_number": 17,
+      "screen_state_id": "home"
+    },
+    {
+      "control_id": "home-starter-btn-2",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::home::home-starter-btn-2",
+      "sequence_number": 18,
+      "screen_state_id": "home"
+    },
+    {
+      "control_id": "home-starter-btn-3",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::home::home-starter-btn-3",
+      "sequence_number": 19,
+      "screen_state_id": "home"
+    },
+    {
+      "control_id": "home-starter-btn-4",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::home::home-starter-btn-4",
+      "sequence_number": 20,
+      "screen_state_id": "home"
+    },
+    {
+      "control_id": "learn.ctrl_0",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::learn::learn.ctrl_0",
+      "sequence_number": 21,
+      "screen_state_id": "learn"
+    },
+    {
+      "control_id": "mode-tab-home",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::learn::mode-tab-home",
+      "sequence_number": 22,
+      "screen_state_id": "learn"
+    },
+    {
+      "control_id": "mode-tab-learn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::learn::mode-tab-learn",
+      "sequence_number": 23,
+      "screen_state_id": "learn"
+    },
+    {
+      "control_id": "mode-tab-study",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::learn::mode-tab-study",
+      "sequence_number": 24,
+      "screen_state_id": "learn"
+    },
+    {
+      "control_id": "mode-tab-analytics",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::learn::mode-tab-analytics",
+      "sequence_number": 25,
+      "screen_state_id": "learn"
+    },
+    {
+      "control_id": "nav-decks-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::learn::nav-decks-btn",
+      "sequence_number": 26,
+      "screen_state_id": "learn"
+    },
+    {
+      "control_id": "nav-export-pdf-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::learn::nav-export-pdf-btn",
+      "sequence_number": 27,
+      "screen_state_id": "learn"
+    },
+    {
+      "control_id": "nav-add-card-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::learn::nav-add-card-btn",
+      "sequence_number": 28,
+      "screen_state_id": "learn"
+    },
+    {
+      "control_id": "nav-settings-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::learn::nav-settings-btn",
+      "sequence_number": 29,
+      "screen_state_id": "learn"
+    },
+    {
+      "control_id": "back-to-home-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::learn::back-to-home-btn",
+      "sequence_number": 30,
+      "screen_state_id": "learn"
+    },
+    {
+      "control_id": "deck-category-filter",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::learn::deck-category-filter",
+      "sequence_number": 31,
+      "screen_state_id": "learn"
+    },
+    {
+      "control_id": "session-terms-mode-toggle",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::learn::session-terms-mode-toggle",
+      "sequence_number": 32,
+      "screen_state_id": "learn"
+    },
+    {
+      "control_id": "nav-glossary-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::learn::nav-glossary-btn",
+      "sequence_number": 33,
+      "screen_state_id": "learn"
+    },
+    {
+      "control_id": "learn-switch-write-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::learn::learn-switch-write-btn",
+      "sequence_number": 34,
+      "screen_state_id": "learn"
+    },
+    {
+      "control_id": "learn-mc-option-0",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::learn::learn-mc-option-0",
+      "sequence_number": 35,
+      "screen_state_id": "learn"
+    },
+    {
+      "control_id": "learn-mc-option-1",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::learn::learn-mc-option-1",
+      "sequence_number": 36,
+      "screen_state_id": "learn"
+    },
+    {
+      "control_id": "learn-mc-option-2",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::learn::learn-mc-option-2",
+      "sequence_number": 37,
+      "screen_state_id": "learn"
+    },
+    {
+      "control_id": "learn-mc-option-3",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::learn::learn-mc-option-3",
+      "sequence_number": 38,
+      "screen_state_id": "learn"
+    },
+    {
+      "control_id": "learn-prev-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::learn::learn-prev-btn",
+      "sequence_number": 39,
+      "screen_state_id": "learn"
+    },
+    {
+      "control_id": "learn-next-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::learn::learn-next-btn",
+      "sequence_number": 40,
+      "screen_state_id": "learn"
+    },
+    {
+      "control_id": "learn-hint-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::learn::learn-hint-btn",
+      "sequence_number": 41,
+      "screen_state_id": "learn"
+    },
+    {
+      "control_id": "learn-reveal-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::learn::learn-reveal-btn",
+      "sequence_number": 42,
+      "screen_state_id": "learn"
+    },
+    {
+      "control_id": "mode-tab-study.ctrl_0",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::mode-tab-study::mode-tab-study.ctrl_0",
+      "sequence_number": 43,
+      "screen_state_id": "mode-tab-study"
+    },
+    {
+      "control_id": "mode-tab-home",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::mode-tab-study::mode-tab-home",
+      "sequence_number": 44,
+      "screen_state_id": "mode-tab-study"
+    },
+    {
+      "control_id": "mode-tab-learn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::mode-tab-study::mode-tab-learn",
+      "sequence_number": 45,
+      "screen_state_id": "mode-tab-study"
+    },
+    {
+      "control_id": "mode-tab-study",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::mode-tab-study::mode-tab-study",
+      "sequence_number": 46,
+      "screen_state_id": "mode-tab-study"
+    },
+    {
+      "control_id": "mode-tab-analytics",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::mode-tab-study::mode-tab-analytics",
+      "sequence_number": 47,
+      "screen_state_id": "mode-tab-study"
+    },
+    {
+      "control_id": "nav-decks-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::mode-tab-study::nav-decks-btn",
+      "sequence_number": 48,
+      "screen_state_id": "mode-tab-study"
+    },
+    {
+      "control_id": "nav-export-pdf-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::mode-tab-study::nav-export-pdf-btn",
+      "sequence_number": 49,
+      "screen_state_id": "mode-tab-study"
+    },
+    {
+      "control_id": "nav-add-card-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::mode-tab-study::nav-add-card-btn",
+      "sequence_number": 50,
+      "screen_state_id": "mode-tab-study"
+    },
+    {
+      "control_id": "nav-settings-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::mode-tab-study::nav-settings-btn",
+      "sequence_number": 51,
+      "screen_state_id": "mode-tab-study"
+    },
+    {
+      "control_id": "back-to-home-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::mode-tab-study::back-to-home-btn",
+      "sequence_number": 52,
+      "screen_state_id": "mode-tab-study"
+    },
+    {
+      "control_id": "deck-category-filter",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::mode-tab-study::deck-category-filter",
+      "sequence_number": 53,
+      "screen_state_id": "mode-tab-study"
+    },
+    {
+      "control_id": "session-terms-mode-toggle",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::mode-tab-study::session-terms-mode-toggle",
+      "sequence_number": 54,
+      "screen_state_id": "mode-tab-study"
+    },
+    {
+      "control_id": "nav-glossary-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::mode-tab-study::nav-glossary-btn",
+      "sequence_number": 55,
+      "screen_state_id": "mode-tab-study"
+    },
+    {
+      "control_id": "study-edit-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::mode-tab-study::study-edit-btn",
+      "sequence_number": 56,
+      "screen_state_id": "mode-tab-study"
+    },
+    {
+      "control_id": "study-delete-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::mode-tab-study::study-delete-btn",
+      "sequence_number": 57,
+      "screen_state_id": "mode-tab-study"
+    },
+    {
+      "control_id": "flashcard-card-inner",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::mode-tab-study::flashcard-card-inner",
+      "sequence_number": 58,
+      "screen_state_id": "mode-tab-study"
+    },
+    {
+      "control_id": "study-prev-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::mode-tab-study::study-prev-btn",
+      "sequence_number": 59,
+      "screen_state_id": "mode-tab-study"
+    },
+    {
+      "control_id": "study-flip-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::mode-tab-study::study-flip-btn",
+      "sequence_number": 60,
+      "screen_state_id": "mode-tab-study"
+    },
+    {
+      "control_id": "study-next-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::mode-tab-study::study-next-btn",
+      "sequence_number": 61,
+      "screen_state_id": "mode-tab-study"
+    },
+    {
+      "control_id": "study-flip-btn.ctrl_0",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::study-flip-btn::study-flip-btn.ctrl_0",
+      "sequence_number": 62,
+      "screen_state_id": "study-flip-btn"
+    },
+    {
+      "control_id": "mode-tab-home",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::study-flip-btn::mode-tab-home",
+      "sequence_number": 63,
+      "screen_state_id": "study-flip-btn"
+    },
+    {
+      "control_id": "mode-tab-learn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::study-flip-btn::mode-tab-learn",
+      "sequence_number": 64,
+      "screen_state_id": "study-flip-btn"
+    },
+    {
+      "control_id": "mode-tab-study",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::study-flip-btn::mode-tab-study",
+      "sequence_number": 65,
+      "screen_state_id": "study-flip-btn"
+    },
+    {
+      "control_id": "mode-tab-analytics",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::study-flip-btn::mode-tab-analytics",
+      "sequence_number": 66,
+      "screen_state_id": "study-flip-btn"
+    },
+    {
+      "control_id": "nav-decks-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::study-flip-btn::nav-decks-btn",
+      "sequence_number": 67,
+      "screen_state_id": "study-flip-btn"
+    },
+    {
+      "control_id": "nav-export-pdf-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::study-flip-btn::nav-export-pdf-btn",
+      "sequence_number": 68,
+      "screen_state_id": "study-flip-btn"
+    },
+    {
+      "control_id": "nav-add-card-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::study-flip-btn::nav-add-card-btn",
+      "sequence_number": 69,
+      "screen_state_id": "study-flip-btn"
+    },
+    {
+      "control_id": "nav-settings-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::study-flip-btn::nav-settings-btn",
+      "sequence_number": 70,
+      "screen_state_id": "study-flip-btn"
+    },
+    {
+      "control_id": "back-to-home-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::study-flip-btn::back-to-home-btn",
+      "sequence_number": 71,
+      "screen_state_id": "study-flip-btn"
+    },
+    {
+      "control_id": "deck-category-filter",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::study-flip-btn::deck-category-filter",
+      "sequence_number": 72,
+      "screen_state_id": "study-flip-btn"
+    },
+    {
+      "control_id": "session-terms-mode-toggle",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::study-flip-btn::session-terms-mode-toggle",
+      "sequence_number": 73,
+      "screen_state_id": "study-flip-btn"
+    },
+    {
+      "control_id": "nav-glossary-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::study-flip-btn::nav-glossary-btn",
+      "sequence_number": 74,
+      "screen_state_id": "study-flip-btn"
+    },
+    {
+      "control_id": "study-edit-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::study-flip-btn::study-edit-btn",
+      "sequence_number": 75,
+      "screen_state_id": "study-flip-btn"
+    },
+    {
+      "control_id": "study-delete-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::study-flip-btn::study-delete-btn",
+      "sequence_number": 76,
+      "screen_state_id": "study-flip-btn"
+    },
+    {
+      "control_id": "flashcard-card-inner",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::study-flip-btn::flashcard-card-inner",
+      "sequence_number": 77,
+      "screen_state_id": "study-flip-btn"
+    },
+    {
+      "control_id": "term-symbol-chip-0",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::study-flip-btn::term-symbol-chip-0",
+      "sequence_number": 78,
+      "screen_state_id": "study-flip-btn"
+    },
+    {
+      "control_id": "term-symbol-chip-1",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::study-flip-btn::term-symbol-chip-1",
+      "sequence_number": 79,
+      "screen_state_id": "study-flip-btn"
+    },
+    {
+      "control_id": "term-symbol-chip-2",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::study-flip-btn::term-symbol-chip-2",
+      "sequence_number": 80,
+      "screen_state_id": "study-flip-btn"
+    },
+    {
+      "control_id": "interactive-terms-toggle-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::study-flip-btn::interactive-terms-toggle-btn",
+      "sequence_number": 81,
+      "screen_state_id": "study-flip-btn"
+    },
+    {
+      "control_id": "study-prev-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::study-flip-btn::study-prev-btn",
+      "sequence_number": 82,
+      "screen_state_id": "study-flip-btn"
+    },
+    {
+      "control_id": "study-flip-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::study-flip-btn::study-flip-btn",
+      "sequence_number": 83,
+      "screen_state_id": "study-flip-btn"
+    },
+    {
+      "control_id": "study-next-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::study-flip-btn::study-next-btn",
+      "sequence_number": 84,
+      "screen_state_id": "study-flip-btn"
+    },
+    {
+      "control_id": "mode-tab-analytics.ctrl_0",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::mode-tab-analytics::mode-tab-analytics.ctrl_0",
+      "sequence_number": 85,
+      "screen_state_id": "mode-tab-analytics"
+    },
+    {
+      "control_id": "mode-tab-home",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::mode-tab-analytics::mode-tab-home",
+      "sequence_number": 86,
+      "screen_state_id": "mode-tab-analytics"
+    },
+    {
+      "control_id": "mode-tab-learn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::mode-tab-analytics::mode-tab-learn",
+      "sequence_number": 87,
+      "screen_state_id": "mode-tab-analytics"
+    },
+    {
+      "control_id": "mode-tab-study",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::mode-tab-analytics::mode-tab-study",
+      "sequence_number": 88,
+      "screen_state_id": "mode-tab-analytics"
+    },
+    {
+      "control_id": "mode-tab-analytics",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::mode-tab-analytics::mode-tab-analytics",
+      "sequence_number": 89,
+      "screen_state_id": "mode-tab-analytics"
+    },
+    {
+      "control_id": "nav-decks-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::mode-tab-analytics::nav-decks-btn",
+      "sequence_number": 90,
+      "screen_state_id": "mode-tab-analytics"
+    },
+    {
+      "control_id": "nav-export-pdf-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::mode-tab-analytics::nav-export-pdf-btn",
+      "sequence_number": 91,
+      "screen_state_id": "mode-tab-analytics"
+    },
+    {
+      "control_id": "nav-add-card-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::mode-tab-analytics::nav-add-card-btn",
+      "sequence_number": 92,
+      "screen_state_id": "mode-tab-analytics"
+    },
+    {
+      "control_id": "nav-settings-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::mode-tab-analytics::nav-settings-btn",
+      "sequence_number": 93,
+      "screen_state_id": "mode-tab-analytics"
+    },
+    {
+      "control_id": "back-to-home-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::mode-tab-analytics::back-to-home-btn",
+      "sequence_number": 94,
+      "screen_state_id": "mode-tab-analytics"
+    },
+    {
+      "control_id": "deck-category-filter",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::mode-tab-analytics::deck-category-filter",
+      "sequence_number": 95,
+      "screen_state_id": "mode-tab-analytics"
+    },
+    {
+      "control_id": "session-terms-mode-toggle",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::mode-tab-analytics::session-terms-mode-toggle",
+      "sequence_number": 96,
+      "screen_state_id": "mode-tab-analytics"
+    },
+    {
+      "control_id": "nav-glossary-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::mode-tab-analytics::nav-glossary-btn",
+      "sequence_number": 97,
+      "screen_state_id": "mode-tab-analytics"
+    },
+    {
+      "control_id": "nav-settings-btn.ctrl_0",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-settings-btn::nav-settings-btn.ctrl_0",
+      "sequence_number": 98,
+      "screen_state_id": "nav-settings-btn"
+    },
+    {
+      "control_id": "mode-tab-home",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-settings-btn::mode-tab-home",
+      "sequence_number": 99,
+      "screen_state_id": "nav-settings-btn"
+    },
+    {
+      "control_id": "mode-tab-learn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-settings-btn::mode-tab-learn",
+      "sequence_number": 100,
+      "screen_state_id": "nav-settings-btn"
+    },
+    {
+      "control_id": "mode-tab-study",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-settings-btn::mode-tab-study",
+      "sequence_number": 101,
+      "screen_state_id": "nav-settings-btn"
+    },
+    {
+      "control_id": "mode-tab-analytics",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-settings-btn::mode-tab-analytics",
+      "sequence_number": 102,
+      "screen_state_id": "nav-settings-btn"
+    },
+    {
+      "control_id": "nav-decks-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-settings-btn::nav-decks-btn",
+      "sequence_number": 103,
+      "screen_state_id": "nav-settings-btn"
+    },
+    {
+      "control_id": "nav-export-pdf-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-settings-btn::nav-export-pdf-btn",
+      "sequence_number": 104,
+      "screen_state_id": "nav-settings-btn"
+    },
+    {
+      "control_id": "nav-add-card-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-settings-btn::nav-add-card-btn",
+      "sequence_number": 105,
+      "screen_state_id": "nav-settings-btn"
+    },
+    {
+      "control_id": "nav-settings-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-settings-btn::nav-settings-btn",
+      "sequence_number": 106,
+      "screen_state_id": "nav-settings-btn"
+    },
+    {
+      "control_id": "back-to-home-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-settings-btn::back-to-home-btn",
+      "sequence_number": 107,
+      "screen_state_id": "nav-settings-btn"
+    },
+    {
+      "control_id": "deck-category-filter",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-settings-btn::deck-category-filter",
+      "sequence_number": 108,
+      "screen_state_id": "nav-settings-btn"
+    },
+    {
+      "control_id": "session-terms-mode-toggle",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-settings-btn::session-terms-mode-toggle",
+      "sequence_number": 109,
+      "screen_state_id": "nav-settings-btn"
+    },
+    {
+      "control_id": "nav-glossary-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-settings-btn::nav-glossary-btn",
+      "sequence_number": 110,
+      "screen_state_id": "nav-settings-btn"
+    },
+    {
+      "control_id": "settings-close-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-settings-btn::settings-close-btn",
+      "sequence_number": 111,
+      "screen_state_id": "nav-settings-btn"
+    },
+    {
+      "control_id": "settings-terms-off-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-settings-btn::settings-terms-off-btn",
+      "sequence_number": 112,
+      "screen_state_id": "nav-settings-btn"
+    },
+    {
+      "control_id": "settings-terms-on-request-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-settings-btn::settings-terms-on-request-btn",
+      "sequence_number": 113,
+      "screen_state_id": "nav-settings-btn"
+    },
+    {
+      "control_id": "settings-terms-after-answer-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-settings-btn::settings-terms-after-answer-btn",
+      "sequence_number": 114,
+      "screen_state_id": "nav-settings-btn"
+    },
+    {
+      "control_id": "settings-terms-hint-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-settings-btn::settings-terms-hint-btn",
+      "sequence_number": 115,
+      "screen_state_id": "nav-settings-btn"
+    },
+    {
+      "control_id": "settings-theme-dark-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-settings-btn::settings-theme-dark-btn",
+      "sequence_number": 116,
+      "screen_state_id": "nav-settings-btn"
+    },
+    {
+      "control_id": "settings-theme-light-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-settings-btn::settings-theme-light-btn",
+      "sequence_number": 117,
+      "screen_state_id": "nav-settings-btn"
+    },
+    {
+      "control_id": "settings-theme-system-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-settings-btn::settings-theme-system-btn",
+      "sequence_number": 118,
+      "screen_state_id": "nav-settings-btn"
+    },
+    {
+      "control_id": "settings-reset-init-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-settings-btn::settings-reset-init-btn",
+      "sequence_number": 119,
+      "screen_state_id": "nav-settings-btn"
+    },
+    {
+      "control_id": "settings-done-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-settings-btn::settings-done-btn",
+      "sequence_number": 120,
+      "screen_state_id": "nav-settings-btn"
+    },
+    {
+      "control_id": "settings-close-btn.ctrl_0",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::settings-close-btn::settings-close-btn.ctrl_0",
+      "sequence_number": 121,
+      "screen_state_id": "settings-close-btn"
+    },
+    {
+      "control_id": "mode-tab-home",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::settings-close-btn::mode-tab-home",
+      "sequence_number": 122,
+      "screen_state_id": "settings-close-btn"
+    },
+    {
+      "control_id": "mode-tab-learn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::settings-close-btn::mode-tab-learn",
+      "sequence_number": 123,
+      "screen_state_id": "settings-close-btn"
+    },
+    {
+      "control_id": "mode-tab-study",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::settings-close-btn::mode-tab-study",
+      "sequence_number": 124,
+      "screen_state_id": "settings-close-btn"
+    },
+    {
+      "control_id": "mode-tab-analytics",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::settings-close-btn::mode-tab-analytics",
+      "sequence_number": 125,
+      "screen_state_id": "settings-close-btn"
+    },
+    {
+      "control_id": "nav-decks-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::settings-close-btn::nav-decks-btn",
+      "sequence_number": 126,
+      "screen_state_id": "settings-close-btn"
+    },
+    {
+      "control_id": "nav-export-pdf-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::settings-close-btn::nav-export-pdf-btn",
+      "sequence_number": 127,
+      "screen_state_id": "settings-close-btn"
+    },
+    {
+      "control_id": "nav-add-card-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::settings-close-btn::nav-add-card-btn",
+      "sequence_number": 128,
+      "screen_state_id": "settings-close-btn"
+    },
+    {
+      "control_id": "nav-settings-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::settings-close-btn::nav-settings-btn",
+      "sequence_number": 129,
+      "screen_state_id": "settings-close-btn"
+    },
+    {
+      "control_id": "back-to-home-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::settings-close-btn::back-to-home-btn",
+      "sequence_number": 130,
+      "screen_state_id": "settings-close-btn"
+    },
+    {
+      "control_id": "deck-category-filter",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::settings-close-btn::deck-category-filter",
+      "sequence_number": 131,
+      "screen_state_id": "settings-close-btn"
+    },
+    {
+      "control_id": "session-terms-mode-toggle",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::settings-close-btn::session-terms-mode-toggle",
+      "sequence_number": 132,
+      "screen_state_id": "settings-close-btn"
+    },
+    {
+      "control_id": "nav-glossary-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::settings-close-btn::nav-glossary-btn",
+      "sequence_number": 133,
+      "screen_state_id": "settings-close-btn"
+    },
+    {
+      "control_id": "nav-add-card-btn.ctrl_0",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-add-card-btn::nav-add-card-btn.ctrl_0",
+      "sequence_number": 134,
+      "screen_state_id": "nav-add-card-btn"
+    },
+    {
+      "control_id": "mode-tab-home",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-add-card-btn::mode-tab-home",
+      "sequence_number": 135,
+      "screen_state_id": "nav-add-card-btn"
+    },
+    {
+      "control_id": "mode-tab-learn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-add-card-btn::mode-tab-learn",
+      "sequence_number": 136,
+      "screen_state_id": "nav-add-card-btn"
+    },
+    {
+      "control_id": "mode-tab-study",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-add-card-btn::mode-tab-study",
+      "sequence_number": 137,
+      "screen_state_id": "nav-add-card-btn"
+    },
+    {
+      "control_id": "mode-tab-analytics",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-add-card-btn::mode-tab-analytics",
+      "sequence_number": 138,
+      "screen_state_id": "nav-add-card-btn"
+    },
+    {
+      "control_id": "nav-decks-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-add-card-btn::nav-decks-btn",
+      "sequence_number": 139,
+      "screen_state_id": "nav-add-card-btn"
+    },
+    {
+      "control_id": "nav-export-pdf-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-add-card-btn::nav-export-pdf-btn",
+      "sequence_number": 140,
+      "screen_state_id": "nav-add-card-btn"
+    },
+    {
+      "control_id": "nav-add-card-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-add-card-btn::nav-add-card-btn",
+      "sequence_number": 141,
+      "screen_state_id": "nav-add-card-btn"
+    },
+    {
+      "control_id": "nav-settings-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-add-card-btn::nav-settings-btn",
+      "sequence_number": 142,
+      "screen_state_id": "nav-add-card-btn"
+    },
+    {
+      "control_id": "back-to-home-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-add-card-btn::back-to-home-btn",
+      "sequence_number": 143,
+      "screen_state_id": "nav-add-card-btn"
+    },
+    {
+      "control_id": "deck-category-filter",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-add-card-btn::deck-category-filter",
+      "sequence_number": 144,
+      "screen_state_id": "nav-add-card-btn"
+    },
+    {
+      "control_id": "session-terms-mode-toggle",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-add-card-btn::session-terms-mode-toggle",
+      "sequence_number": 145,
+      "screen_state_id": "nav-add-card-btn"
+    },
+    {
+      "control_id": "nav-glossary-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-add-card-btn::nav-glossary-btn",
+      "sequence_number": 146,
+      "screen_state_id": "nav-add-card-btn"
+    },
+    {
+      "control_id": "creator-tab-single-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-add-card-btn::creator-tab-single-btn",
+      "sequence_number": 147,
+      "screen_state_id": "nav-add-card-btn"
+    },
+    {
+      "control_id": "creator-tab-bulk-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-add-card-btn::creator-tab-bulk-btn",
+      "sequence_number": 148,
+      "screen_state_id": "nav-add-card-btn"
+    },
+    {
+      "control_id": "creator-close-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-add-card-btn::creator-close-btn",
+      "sequence_number": 149,
+      "screen_state_id": "nav-add-card-btn"
+    },
+    {
+      "control_id": "creator-title-input",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-add-card-btn::creator-title-input",
+      "sequence_number": 150,
+      "screen_state_id": "nav-add-card-btn"
+    },
+    {
+      "control_id": "creator-category-input",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-add-card-btn::creator-category-input",
+      "sequence_number": 151,
+      "screen_state_id": "nav-add-card-btn"
+    },
+    {
+      "control_id": "creator-prompt-input",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-add-card-btn::creator-prompt-input",
+      "sequence_number": 152,
+      "screen_state_id": "nav-add-card-btn"
+    },
+    {
+      "control_id": "creator-toolbar-cat-0",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-add-card-btn::creator-toolbar-cat-0",
+      "sequence_number": 153,
+      "screen_state_id": "nav-add-card-btn"
+    },
+    {
+      "control_id": "creator-toolbar-cat-1",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-add-card-btn::creator-toolbar-cat-1",
+      "sequence_number": 154,
+      "screen_state_id": "nav-add-card-btn"
+    },
+    {
+      "control_id": "creator-toolbar-cat-2",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-add-card-btn::creator-toolbar-cat-2",
+      "sequence_number": 155,
+      "screen_state_id": "nav-add-card-btn"
+    },
+    {
+      "control_id": "creator-toolbar-cat-3",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-add-card-btn::creator-toolbar-cat-3",
+      "sequence_number": 156,
+      "screen_state_id": "nav-add-card-btn"
+    },
+    {
+      "control_id": "creator-toolbar-item-0",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-add-card-btn::creator-toolbar-item-0",
+      "sequence_number": 157,
+      "screen_state_id": "nav-add-card-btn"
+    },
+    {
+      "control_id": "creator-toolbar-item-1",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-add-card-btn::creator-toolbar-item-1",
+      "sequence_number": 158,
+      "screen_state_id": "nav-add-card-btn"
+    },
+    {
+      "control_id": "creator-toolbar-item-2",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-add-card-btn::creator-toolbar-item-2",
+      "sequence_number": 159,
+      "screen_state_id": "nav-add-card-btn"
+    },
+    {
+      "control_id": "creator-toolbar-item-3",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-add-card-btn::creator-toolbar-item-3",
+      "sequence_number": 160,
+      "screen_state_id": "nav-add-card-btn"
+    },
+    {
+      "control_id": "creator-toolbar-item-4",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-add-card-btn::creator-toolbar-item-4",
+      "sequence_number": 161,
+      "screen_state_id": "nav-add-card-btn"
+    },
+    {
+      "control_id": "creator-toolbar-item-5",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-add-card-btn::creator-toolbar-item-5",
+      "sequence_number": 162,
+      "screen_state_id": "nav-add-card-btn"
+    },
+    {
+      "control_id": "creator-toolbar-item-6",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-add-card-btn::creator-toolbar-item-6",
+      "sequence_number": 163,
+      "screen_state_id": "nav-add-card-btn"
+    },
+    {
+      "control_id": "creator-toolbar-item-7",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-add-card-btn::creator-toolbar-item-7",
+      "sequence_number": 164,
+      "screen_state_id": "nav-add-card-btn"
+    },
+    {
+      "control_id": "creator-toolbar-item-8",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-add-card-btn::creator-toolbar-item-8",
+      "sequence_number": 165,
+      "screen_state_id": "nav-add-card-btn"
+    },
+    {
+      "control_id": "creator-toolbar-item-9",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-add-card-btn::creator-toolbar-item-9",
+      "sequence_number": 166,
+      "screen_state_id": "nav-add-card-btn"
+    },
+    {
+      "control_id": "creator-toolbar-item-10",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-add-card-btn::creator-toolbar-item-10",
+      "sequence_number": 167,
+      "screen_state_id": "nav-add-card-btn"
+    },
+    {
+      "control_id": "creator-answer-input",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-add-card-btn::creator-answer-input",
+      "sequence_number": 168,
+      "screen_state_id": "nav-add-card-btn"
+    },
+    {
+      "control_id": "creator-short-prompt-input",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-add-card-btn::creator-short-prompt-input",
+      "sequence_number": 169,
+      "screen_state_id": "nav-add-card-btn"
+    },
+    {
+      "control_id": "creator-cheatsheet-note-input",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-add-card-btn::creator-cheatsheet-note-input",
+      "sequence_number": 170,
+      "screen_state_id": "nav-add-card-btn"
+    },
+    {
+      "control_id": "creator-detect-terms-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "disabled",
+      "test_node_id": "playwright::nav-add-card-btn::creator-detect-terms-btn",
+      "sequence_number": 171,
+      "screen_state_id": "nav-add-card-btn"
+    },
+    {
+      "control_id": "creator-manual-symbol-input",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-add-card-btn::creator-manual-symbol-input",
+      "sequence_number": 172,
+      "screen_state_id": "nav-add-card-btn"
+    },
+    {
+      "control_id": "creator-add-manual-term-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "disabled",
+      "test_node_id": "playwright::nav-add-card-btn::creator-add-manual-term-btn",
+      "sequence_number": 173,
+      "screen_state_id": "nav-add-card-btn"
+    },
+    {
+      "control_id": "creator-hint-input",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-add-card-btn::creator-hint-input",
+      "sequence_number": 174,
+      "screen_state_id": "nav-add-card-btn"
+    },
+    {
+      "control_id": "creator-explanation-input",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-add-card-btn::creator-explanation-input",
+      "sequence_number": 175,
+      "screen_state_id": "nav-add-card-btn"
+    },
+    {
+      "control_id": "creator-cancel-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "enabled",
+      "test_node_id": "playwright::nav-add-card-btn::creator-cancel-btn",
+      "sequence_number": 176,
+      "screen_state_id": "nav-add-card-btn"
+    },
+    {
+      "control_id": "creator-save-another-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "disabled",
+      "test_node_id": "playwright::nav-add-card-btn::creator-save-another-btn",
+      "sequence_number": 177,
+      "screen_state_id": "nav-add-card-btn"
+    },
+    {
+      "control_id": "creator-save-btn",
+      "input_kind": "mouse",
+      "trusted": true,
+      "control_state": "disabled",
+      "test_node_id": "playwright::nav-add-card-btn::creator-save-btn",
+      "sequence_number": 178,
+      "screen_state_id": "nav-add-card-btn"
+    }
+  ]
+}

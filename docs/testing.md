@@ -49,3 +49,12 @@ To replay all saved seeds:
 pnpm exec playwright test tests/e2e/stateful-runner.spec.ts --project=desktop-chrome
 ```
 Every seed in `tests/regressions/seeds.json` is replayed on every test run.
+
+## Related Documentation
+
+- [Project Overview](../README.md)
+- [Test Matrix](test-matrix.md)
+- [System Architecture](ARCHITECTURE.md)
+- [Expression Language](EXPRESSION_LANGUAGE.md)
+- [Developer Guide](DEVELOPMENT.md)
+- [Known Issues](known-issues.md)

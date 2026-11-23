@@ -118,3 +118,11 @@
 - **Layout & Viewport:** Zero horizontal scroll overflow on 360px through desktop viewports.
 - **XSS & Injection Safety:** Injected HTML/script payloads safely escaped as plain text.
 - **Accessibility Compliance:** Axe-core analysis reports zero critical violations.
+
+## Related Documentation
+
+- [Project Overview](../README.md)
+- [Testing Guide](testing.md)
+- [System Architecture](ARCHITECTURE.md)
+- [Developer Guide](DEVELOPMENT.md)
+- [Known Issues](known-issues.md)

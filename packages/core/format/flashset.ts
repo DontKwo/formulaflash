@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { CardSetSchema, CardSchema, CardProgressSchema } from '../model/index.js';
 import type { CardSet, Card, CardProgress } from '../model/index.js';
 
-// Bundle schema definition supporting v1 (legacy) and v2 (terms and glossaries)
+// Bundle schema definition supporting v1 and v2 (terms and glossaries)
 export const FlashsetBundleSchema = z.object({
   version: z.union([z.literal(1), z.literal(2)]),
   schemaVersion: z.string(),
@@ -14,7 +14,7 @@ export const FlashsetBundleSchema = z.object({
 
 export type FlashsetBundle = z.infer<typeof FlashsetBundleSchema>;
 
-// Migrates legacy bundle (v1) to modern bundle (v2)
+// Migrates v1 bundle format to v2 bundle format
 export function migrateFlashsetBundle(raw: unknown): FlashsetBundle {
   if (typeof raw !== 'object' || raw === null) {
     throw new Error('Invalid bundle: not an object');

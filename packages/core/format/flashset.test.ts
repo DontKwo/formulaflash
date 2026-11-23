@@ -61,14 +61,14 @@ describe('flashset format', () => {
     expect(parsed.progress).toBeUndefined();
   });
 
-  it('should seamlessly migrate v1 legacy bundles without terms or glossary', () => {
-    const legacyBundle = {
+  it('should migrate v1 bundles without terms or glossary', () => {
+    const v1Bundle = {
       version: 1,
       schemaVersion: '1.0.0',
       exportedAt: 1000,
       set: {
-        id: 'legacy-set',
-        title: 'Legacy Deck',
+        id: 'v1-set',
+        title: 'V1 Deck',
         tags: ['physics'],
         createdAt: 1000,
         updatedAt: 1000,
@@ -78,12 +78,12 @@ describe('flashset format', () => {
       },
       cards: [
         {
-          id: 'legacy-card',
-          setId: 'legacy-set',
+          id: 'v1-card',
+          setId: 'v1-set',
           order: 0,
           type: 'basic',
-          front: [{ t: 'text', v: 'Legacy Question' }],
-          back: [{ t: 'text', v: 'Legacy Answer' }],
+          front: [{ t: 'text', v: 'V1 Question' }],
+          back: [{ t: 'text', v: 'V1 Answer' }],
           answer: { checker: 'text', accepted: [], options: {} },
           hints: [],
           tags: [],
@@ -96,15 +96,16 @@ describe('flashset format', () => {
       ],
     };
 
-    const migrated = migrateFlashsetBundle(legacyBundle);
+    const migrated = migrateFlashsetBundle(v1Bundle);
     expect(migrated.version).toBe(2);
     expect(migrated.schemaVersion).toBe('2.0.0');
-    expect(migrated.set.id).toBe('legacy-set');
-    expect(migrated.cards[0].id).toBe('legacy-card');
+    expect(migrated.set.id).toBe('v1-set');
+    expect(migrated.cards[0].id).toBe('v1-card');
     expect(migrated.cards[0].terms).toBeUndefined();
 
-    // Round-trip parsing legacy json string through importFlashset
-    const parsed = importFlashset(JSON.stringify(legacyBundle));
+    // Round-trip parsing v1 json string through importFlashset
+    const parsed = importFlashset(JSON.stringify(v1Bundle));
+    expect(migrated.version).toBe(2);
     expect(parsed.version).toBe(2);
     expect(parsed.cards[0].terms).toBeUndefined();
   });

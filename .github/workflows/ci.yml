@@ -1,10 +1,12 @@
-name: CI
+name: CI & Release
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
   pull_request:
-    branches: [ "main" ]
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -12,121 +14,268 @@ permissions:
 
 jobs:
   lint-and-test:
-    name: Lint, ClaudeMD, and Tests
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout FormulaFlash
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          fetch-tags: true
 
-      - name: Checkout ai-dev-tools for linter
-        uses: actions/checkout@v4
-        with:
-          repository: DontKwo/ai-dev-tools
-          path: .toolchain/ai-dev-tools
-
-      - name: Set up Python 3.12
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - name: Install uv
+      - name: Setup uv
         uses: astral-sh/setup-uv@v5
 
-      - name: Run ClaudeMD Strict Linter
-        run: uv run --no-project python .toolchain/ai-dev-tools/scripts/claudemd_linter.py . --level strict
-
-      - name: Display Lint Report on Failure
-        if: failure()
-        run: |
-          find .toolchain/ai-dev-tools/scripts/ -name "lint_report*.txt" -exec cat {} + || true
-
-      - name: Set up pnpm
-        uses: pnpm/action-setup@v3
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
         with:
           version: 8
 
-      - name: Set up Node.js 22
+      - name: Setup Node.js 22
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: 'pnpm'
+          cache: "pnpm"
 
-      - name: Install dependencies
+      - name: Clone ai-dev-tools
+        shell: bash
+        run: git clone --depth 1 https://github.com/DontKwo/ai-dev-tools.git "${{ runner.temp }}/_aitools"
+
+      - name: Run Strict Linter and Link Check
+        shell: bash
+        run: |
+          if ! uv run --no-project python "${{ runner.temp }}/_aitools/scripts/claudemd_linter.py" . --level strict --full --no-cache; then
+            cat "${{ runner.temp }}/_aitools/scripts"/lint_report_*.txt || true
+            exit 1
+          fi
+          uv run --no-project python "${{ runner.temp }}/_aitools/scripts/link_checker.py" .
+
+      - name: Install Workspace Dependencies
         run: pnpm install --no-frozen-lockfile
 
-      - name: ESLint
-        run: pnpm run lint
+      - name: Run ESLint, Typecheck, Architecture, Unit & Smoke Tests
+        run: |
+          pnpm run lint
+          pnpm run typecheck
+          pnpm exec depcruise packages apps
+          pnpm run test
+          pnpm --filter app run build
+          npx playwright install --with-deps chromium
+          pnpm run test:smoke
 
-      - name: TypeScript typecheck
-        run: pnpm run typecheck
+      - name: Compute Next SemVer Release Version
+        id: ver
+        shell: python
+        run: |
+          import os, re, subprocess
+          subprocess.run(["git", "fetch", "--tags", "--force"], check=False)
+          raw_tags = subprocess.check_output(["git", "tag", "--list", "v*"], text=True).splitlines()
+          semvers = []
+          for t in raw_tags:
+              m = re.match(r"^v?(\d+)\.(\d+)\.(\d+)$", t.strip())
+              if m:
+                  semvers.append(tuple(int(x) for x in m.groups()))
+          base = max(semvers) if semvers else (0, 1, 0)
+          next_ver = (base[0], base[1], base[2] + 1) if f"v{base[0]}.{base[1]}.{base[2]}" in raw_tags else base
+          ver_str = f"{next_ver[0]}.{next_ver[1]}.{next_ver[2]}"
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as f:
+              f.write(f"version={ver_str}\ntag=v{ver_str}\n")
+          print(f"Resolved version v{ver_str}")
+    outputs:
+      version: ${{ steps.ver.outputs.version }}
+      tag: ${{ steps.ver.outputs.tag }}
 
-      - name: Dependency Cruiser architecture check
-        run: pnpm exec depcruise packages apps
+  build-windows:
+    needs: lint-and-test
+    runs-on: windows-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-      - name: Run test suite
-        run: pnpm run test
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
 
-  android-debug-apk:
-    name: Build Android APK
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "pnpm"
+
+      - name: Install and Build Windows Executable
+        run: |
+          pnpm install --no-frozen-lockfile
+          pnpm --filter app run build
+          pnpm run build:desktop
+          .\build\FormulaFlash-Windows.exe --self-test
+
+      - name: Upload Windows Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-package
+          path: build/FormulaFlash-Windows.exe
+
+  build-macos:
+    needs: lint-and-test
+    runs-on: macos-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "pnpm"
+
+      - name: Build macOS Standalone Bundle and Self-Test
+        run: |
+          pnpm install --no-frozen-lockfile
+          pnpm --filter app run build
+          python3 -m pip install --upgrade pip pyinstaller pillow
+          node scripts/build_desktop_unix.cjs --platform macos --self-test
+
+      - name: Upload macOS Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-package
+          path: build/FormulaFlash-macOS.zip
+
+  build-linux:
     needs: lint-and-test
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Set up pnpm
-        uses: pnpm/action-setup@v3
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
         with:
           version: 8
 
-      - name: Set up Java 21
-        uses: actions/setup-java@v5
-        with:
-          distribution: 'temurin'
-          java-version: '21'
-
-      - name: Set up Node.js 22
+      - name: Setup Node.js 22
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: 'pnpm'
+          cache: "pnpm"
 
-      - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile
+      - name: Build Linux Standalone Bundle and Self-Test
+        run: |
+          pnpm install --no-frozen-lockfile
+          pnpm --filter app run build
+          python3 -m pip install --upgrade pip pyinstaller pillow
+          node scripts/build_desktop_unix.cjs --platform linux --self-test
 
-      - name: Build web application
-        run: pnpm --filter app run build
-
-      - name: Sync Capacitor Android
-        run: cd apps/app && npx cap sync android
-
-      - name: Build Android Debug APK
-        run: cd apps/app/android && chmod +x ./gradlew && ./gradlew assembleDebug
-
-      - name: Stage APK for release
-        run: cp apps/app/android/app/build/outputs/apk/debug/app-debug.apk formulaflash-debug.apk
-
-      - name: Upload APK artifact
+      - name: Upload Linux Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app-debug
-          path: formulaflash-debug.apk
+          name: linux-package
+          path: build/FormulaFlash-Linux.tar.gz
 
-      - name: Publish latest APK release
-        if: github.ref == 'refs/heads/main'
+  build-android:
+    needs: lint-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "pnpm"
+
+      - name: Setup Java JDK 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: "temurin"
+          java-version: "21"
+
+      - name: Sync Web Bundle and Build Signed Release APK
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          pnpm install --no-frozen-lockfile
+          pnpm --filter app run build
+          (cd apps/app && npx cap sync android)
+          if [ -z "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "Missing ANDROID_KEYSTORE_BASE64 secret" >&2
+            exit 1
+          fi
+          KEYSTORE_TMP="$(mktemp /tmp/formulaflash-ks-XXXXXX.jks)"
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$KEYSTORE_TMP"
+          export ANDROID_KEYSTORE_PATH="$KEYSTORE_TMP"
+          (
+            cd apps/app/android
+            chmod +x ./gradlew
+            ./gradlew assembleRelease --console=plain
+          )
+          rm -f "$KEYSTORE_TMP"
+          APK_PATH="apps/app/android/app/build/outputs/apk/release/app-release.apk"
+          CERT_INFO=$(keytool -printcert -jarfile "$APK_PATH")
+          echo "$CERT_INFO"
+          if echo "$CERT_INFO" | grep -q "CN=Android Debug"; then
+            echo "ERROR: APK is signed with debug certificate" >&2
+            exit 1
+          fi
+          if ! echo "$CERT_INFO" | grep -q "CN=FormulaFlash"; then
+            echo "ERROR: APK missing CN=FormulaFlash certificate" >&2
+            exit 1
+          fi
+          mkdir -p release-assets
+          cp "$APK_PATH" release-assets/FormulaFlash-Android.apk
+
+      - name: Upload Android APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-package
+          path: release-assets/FormulaFlash-Android.apk
+
+  release:
+    needs: [lint-and-test, build-windows, build-macos, build-linux, build-android]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Release Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: latest
-          target_commitish: ${{ github.sha }}
-          name: "Latest Build (Android APK)"
-          body: |
-            Automated Android build generated on push to `main` (${{ github.sha }}).
-
-            ### Direct Download
-            Download and install directly on Android:
-            - **[formulaflash-debug.apk](https://github.com/${{ github.repository }}/releases/download/latest/formulaflash-debug.apk)**
-          prerelease: true
-          make_latest: true
-          files: formulaflash-debug.apk
+          tag_name: ${{ needs.lint-and-test.outputs.tag }}
+          name: FormulaFlash ${{ needs.lint-and-test.outputs.tag }}
+          prerelease: false
+          make_latest: "true"
+          generate_release_notes: true
+          files: |
+            artifacts/windows-package/FormulaFlash-Windows.exe
+            artifacts/macos-package/FormulaFlash-macOS.zip
+            artifacts/linux-package/FormulaFlash-Linux.tar.gz
+            artifacts/android-package/FormulaFlash-Android.apk

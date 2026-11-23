@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "pnpm --filter app run dev",
     "build": "pnpm --filter app run build",
+    "build:desktop": "node scripts/build_desktop_exe.cjs",
+    "build:desktop:unix": "node scripts/build_desktop_unix.cjs",
     "android:apk": "node scripts/build-apk.mjs",
     "lint": "eslint .",
     "format": "prettier --write .",
@@ -34,6 +36,6 @@
     "node": ">=18"
   },
   "author": "DontKwo",
-  "license": "GPL-3.0-or-later",
+  "license": "MIT",
   "publisher": "DontKwo"
 }
