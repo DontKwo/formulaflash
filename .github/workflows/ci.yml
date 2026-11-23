@@ -235,7 +235,8 @@ jobs:
           )
           rm -f "$KEYSTORE_TMP"
           APK_PATH="apps/app/android/app/build/outputs/apk/release/app-release.apk"
-          CERT_INFO=$(keytool -printcert -jarfile "$APK_PATH")
+          APKSIGNER="$(ls -d "${ANDROID_HOME:-/usr/local/lib/android/sdk}"/build-tools/*/apksigner | sort -V | tail -n 1)"
+          CERT_INFO=$("$APKSIGNER" verify --print-certs "$APK_PATH")
           echo "$CERT_INFO"
           if echo "$CERT_INFO" | grep -q "CN=Android Debug"; then
             echo "ERROR: APK is signed with debug certificate" >&2
