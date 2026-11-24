@@ -5,7 +5,7 @@ Welcome to the Formula Flash user guide! This document will walk you through how
 ## 1. Creating and Managing Sets
 
 ### Creating a New Set
-1. On the home screen, click the **Plus (+)** button.
+1. On the home screen, click **+ Create New Set**.
 2. Give your set a descriptive title (e.g., "Calculus 101" or "Physics Kinematics").
 3. You will be taken to the set editor where you can begin adding cards.
 

@@ -6,17 +6,19 @@ Developers building macOS/Linux desktop wrappers or executing the strict reposit
 
 ---
 
-## Windows
+## Platform Instructions
+
+### Windows
 
 Choose either the official standalone installer or a Windows package manager:
 
-### Official Standalone Installer (PowerShell)
+**Official Standalone Installer (PowerShell)**
 
 ```powershell
 powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
 ```
 
-### Package Managers (`winget` or `scoop`)
+**Package Managers (`winget` or `scoop`)**
 
 ```powershell
 winget install --id=astral-sh.uv -e
@@ -26,17 +28,17 @@ scoop install main/uv
 
 ---
 
-## macOS
+### macOS
 
 Choose either the official standalone installer or a macOS package manager:
 
-### Official Standalone Installer
+**Official Standalone Installer**
 
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-### Package Managers (Homebrew or MacPorts)
+**Package Managers (Homebrew or MacPorts)**
 
 ```bash
 brew install uv
@@ -46,11 +48,11 @@ sudo port install uv
 
 ---
 
-## Linux
+### Linux
 
 Choose the official standalone installer (`curl` or `wget`) or `pipx`:
 
-### Official Standalone Installer
+**Official Standalone Installer**
 
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -62,7 +64,7 @@ With `wget`:
 wget -qO- https://astral.sh/uv/install.sh | sh
 ```
 
-### Isolated PyPI Install (`pipx`, All Platforms)
+**Isolated PyPI Install (`pipx`, All Platforms)**
 
 ```bash
 pipx install uv

@@ -26,11 +26,12 @@ Browse release notes on [All Releases](https://github.com/DontKwo/formulaflash/r
 ## Screenshots
 
 <p align="center">
-  <img src="assets/screenshots/01_main.png" alt="FormulaFlash Learn View" width="760" />
+  <img src="assets/screenshots/01_main.png" alt="FormulaFlash Desktop Study Sets" width="540" />
+  <img src="assets/screenshots/03_mobile.png" alt="FormulaFlash Android Mobile View" width="210" />
 </p>
 
 <p align="center">
-  <img src="assets/screenshots/02_flashcards.png" alt="FormulaFlash Study Deck" width="760" />
+  <img src="assets/screenshots/02_flashcards.png" alt="FormulaFlash Flashcard Study Mode" width="760" />
 </p>
 
 ---
@@ -54,14 +55,6 @@ Browse release notes on [All Releases](https://github.com/DontKwo/formulaflash/r
 
 ---
 
-## Safety & Disclaimers
-
-- **Official `main` Releases Only**: Only download executables or APKs from [DontKwo/formulaflash](https://github.com/DontKwo/formulaflash/releases/latest) (`main` branch). Never download forked releases unless you are certain they contain no malware; only the `main` stream is maintained by the author, and I make no promises.
-- **OS & Phone Security Warnings**: Windows SmartScreen, macOS Gatekeeper, and Android Play Protect will likely warn that independently distributed apps are unrecognized or unsafe. Bypassing those prompts is strictly at your own discretion. Follow [Desktop Installation Guide](docs/INSTALLATION.md) or [Android APK Installation Guide](docs/APK_INSTALLATION.md) for instructions.
-- **AS-IS Disclaimer**: Provided "AS IS" under the [MIT License](LICENSE) with zero warranty or liability. Use at your own risk, verify critical exam formulas independently, and back up your `.flashset` decks regularly.
-
----
-
 ## Documentation
 
 ### User Documentation
@@ -76,7 +69,7 @@ Browse release notes on [All Releases](https://github.com/DontKwo/formulaflash/r
 - [Developer uv Installation](docs/UV_INSTALLATION.md)
 - [Human Setup](docs/HUMAN_SETUP.md)
 
-### AI, Mathematical Proof & Technical Documentation
+### AI & Technical Documentation
 - [AI Agent Rules](AGENTS.md)
 - [System Architecture](docs/ARCHITECTURE.md)
 - [Expression Language Specification](docs/EXPRESSION_LANGUAGE.md)
@@ -88,3 +81,11 @@ Browse release notes on [All Releases](https://github.com/DontKwo/formulaflash/r
 - [Security Policy](SECURITY.md)
 - [Third-Party Notices](THIRD_PARTY_NOTICES.md)
 - [MIT License](LICENSE)
+
+---
+
+## Safety & Disclaimers
+
+- **Official `main` Releases Only**: Only download executables or APKs from [DontKwo/formulaflash](https://github.com/DontKwo/formulaflash/releases/latest) (`main` branch). Never download forked releases unless you are certain they contain no malware; only the `main` stream is maintained by the author, and I make no promises.
+- **OS & Phone Security Warnings**: Windows SmartScreen, macOS Gatekeeper, and Android Play Protect will likely warn that independently distributed apps are unrecognized or unsafe. Bypassing those prompts is strictly at your own discretion. Follow [Desktop Installation Guide](docs/INSTALLATION.md) or [Android APK Installation Guide](docs/APK_INSTALLATION.md) for instructions.
+- **AS-IS Disclaimer**: Provided "AS IS" under the [MIT License](LICENSE) with zero warranty or liability. Use at your own risk, verify critical exam formulas independently, and back up your `.flashset` decks regularly.

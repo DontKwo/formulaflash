@@ -2,15 +2,11 @@
 
 Install and launch FormulaFlash on your computer without Python, Node.js, or developer tools.
 
-## Safety & Authenticity Warning
-
-- **Official `main` Releases Only**: Download FormulaFlash exclusively from [DontKwo/formulaflash Releases](https://github.com/DontKwo/formulaflash/releases/latest).
-- **Fork Warning**: Never download builds from forked repositories unless you have verified the source code yourself and know they do not contain malware. Only official `main` releases are maintained by the author, and I make no promises.
-- **Bypassing Security Prompts**: Because independent open-source executables do not carry paid commercial signing certificates, Windows and macOS will warn that the app is unrecognized or potentially unsafe. Bypassing these warnings is strictly at your own discretion, and the software is provided "AS IS" with zero liability.
-
 ---
 
-## Windows
+## Platform Instructions
+
+### Windows
 
 1. Download `FormulaFlash-Windows.exe` from [Latest Releases](https://github.com/DontKwo/formulaflash/releases/latest).
 2. Double-click `FormulaFlash-Windows.exe` to open the desktop app.
@@ -21,7 +17,7 @@ Install and launch FormulaFlash on your computer without Python, Node.js, or dev
 
 ---
 
-## macOS
+### macOS
 
 1. Download `FormulaFlash-macOS.zip` from [Latest Releases](https://github.com/DontKwo/formulaflash/releases/latest).
 2. Double-click the archive to unpack it and drag **`FormulaFlash.app`** (or the `FormulaFlash` binary) into your **Applications** folder.
@@ -33,12 +29,20 @@ Install and launch FormulaFlash on your computer without Python, Node.js, or dev
 
 ---
 
-## Linux
+### Linux
 
 1. Download `FormulaFlash-Linux.tar.gz` from [Latest Releases](https://github.com/DontKwo/formulaflash/releases/latest).
 2. Extract the archive in your file manager (or run `tar -xzf FormulaFlash-Linux.tar.gz`).
 3. Make the extracted binary executable (right-click -> **Properties** -> **Permissions** -> allow executing as program, or run `chmod +x FormulaFlash`).
 4. Double-click `FormulaFlash` to launch.
+
+---
+
+## Safety & Authenticity Warning
+
+- **Official `main` Releases Only**: Download FormulaFlash exclusively from [DontKwo/formulaflash Releases](https://github.com/DontKwo/formulaflash/releases/latest).
+- **Fork Warning**: Never download builds from forked repositories unless you have verified the source code yourself and know they do not contain malware. Only official `main` releases are maintained by the author, and I make no promises.
+- **Bypassing Security Prompts**: Because independent open-source executables do not carry paid commercial signing certificates, Windows and macOS will warn that the app is unrecognized or potentially unsafe. Bypassing these prompts is strictly at your own discretion, and the software is provided "AS IS" with zero liability.
 
 ---
 
